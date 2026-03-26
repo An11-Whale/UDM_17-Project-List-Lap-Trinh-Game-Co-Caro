@@ -23,12 +23,16 @@ public class client {
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         System.out.println("Connected to server at " + host + ":" + port);
+
+        String startMsg = in.readLine(); //doc START_X & START_O
+        System.out.println("Server: " + startMsg);
     }
     public String Client_Send(String message) {
         if(socket == null || socket.isClosed()) {
             System.err.println("Client is not connected to a server.");
             return null;
         }
+        out.println(message);
         try {
             out.println(message);
             String response = in.readLine();
@@ -37,6 +41,19 @@ public class client {
             System.err.println("Error sending message: " + e.getMessage());
             return null;
         }
+    }
+    //ham luon nhan data tu server
+    public void Client_Receive() {
+        new Thread(() -> {
+            try {
+                String msg;
+                while ((msg = in.readLine()) != null) {
+                    System.out.println("Server send: " + msg);
+                }
+            } catch (IOException e) {
+                System.err.println("Disconnect to server");
+            }
+        }).start();
     }
     public void Client_Disconnect() {
         try {
@@ -61,7 +78,9 @@ public class client {
         client client = new client();
         try {
             client.Client_Connect("localhost", 12345);
-            client.Client_Register("testuser", "testpassword");
+            client.Client_Receive(); //mo luong nhan data tu sv
+            client.Client_Send("HELLO");//test gui 
+            client.Client_Register("HP4", "hhhuuuhhhhh");
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
         } finally {
