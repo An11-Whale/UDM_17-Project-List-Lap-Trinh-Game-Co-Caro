@@ -24,24 +24,16 @@ public class client {
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         System.out.println("Connected to server at " + host + ":" + port);
 
-        String startMsg = in.readLine(); //doc START_X & START_O
-        System.out.println("Server: " + startMsg);
+        //String startMsg = in.readLine(); //doc START_X & START_O
+        //System.out.println("Server: " + startMsg);
     }
-    public String Client_Send(String message) {
-        if(socket == null || socket.isClosed()) {
-            System.err.println("Client is not connected to a server.");
-            return null;
-        }
-        out.println(message);
-        try {
-            out.println(message);
-            String response = in.readLine();
-            return response;
-        } catch (IOException e) {
-            System.err.println("Error sending message: " + e.getMessage());
-            return null;
-        }
+    public void Client_Send(String message) {
+    if(socket == null || socket.isClosed()) {
+        System.err.println("Client is not connected to a server.");
+        return;
     }
+    out.println(message);
+}
     //ham luon nhan data tu server
     public void Client_Receive() {
         new Thread(() -> {
@@ -78,13 +70,12 @@ public class client {
         client client = new client();
         try {
             client.Client_Connect("localhost", 12345);
-            client.Client_Receive(); //mo luong nhan data tu sv
-            client.Client_Send("HELLO");//test gui 
-            client.Client_Register("HP4", "hhhuuuhhhhh");
+            client.Client_Receive(); //mo luong nhan
+            client.Client_Register("HP2", "hhhhhhhh2");
+            // login vao hang cho
+            client.Client_Send("LOGIN HP2 hhhhhhhh2");
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
-        } finally {
-            client.Client_Disconnect();
         }
     }
 }

@@ -47,7 +47,6 @@ class Server:
             threading.Thread(target=self.Sever_Handle_client, args=(conn, addr)).start()# tao thread moi de xu ly client
     # xu ly client
     def Sever_Handle_client(self, conn, addr):
-        with conn:
             print(f'Connected by {addr}')
             while True:
                 data = conn.recv(1024)
