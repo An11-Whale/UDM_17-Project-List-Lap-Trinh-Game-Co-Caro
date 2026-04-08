@@ -6,19 +6,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 
-/**
- * GUIBoard — Giao dien ban co Caro (Gomoku) 15x15.
- *
- * Tinh nang:
- *  - Ve ban co voi hieu ung go (wood-like)
- *  - Hieu ung hover khi di chuot
- *  - Danh dau nuoc di cuoi cung
- *  - Highlight dong thang khi co nguoi thang
- *  - Panel thong tin ben phai (nguoi choi, luot di, trang thai)
- *  - Kiem tra thang/thua (5 quan lien tiep)
- *  - Che do choi local 2 nguoi de test (trong main)
- *  - Tich hop voi client.java qua MoveListener
- */
 public class GUIBoard extends JFrame {
 
     // ==================== HANG SO BAN CO ====================
