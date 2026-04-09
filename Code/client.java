@@ -8,28 +8,17 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 
-/**
- * Client cho game Co Caro — ket noi den server de choi voi nguoi khac.
- * 
- * Luong hoat dong:
- *   1. Hien thi cua so dang nhap (host, port, username, password)
- *   2. Ket noi den server → Dang ky → Dang nhap
- *   3. Cho doi thu (server ghep cap 2 nguoi)
- *   4. Nhan "START: You are X/O" → Mo ban co GUIBoard
- *   5. Gui/nhan nuoc di qua server (format: "MOVE row col")
- */
 public class client {
 
-    // ==================== KET NOI MANG ====================
+    //KET NOI MANG
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
 
-    // ==================== GUI ====================
+    // GUI
     private GUIBoard board;
     private JFrame loginFrame;
-
-    // ==================== BANG MAU (dong bo voi GUIBoard) ====================
+    
     private static final Color BG = new Color(18, 18, 35);
     private static final Color PANEL = new Color(28, 28, 52);
     private static final Color CARD_BG = new Color(35, 35, 65);
@@ -41,8 +30,7 @@ public class client {
     private static final Color SUCCESS = new Color(76, 175, 80);
     private static final Color ERROR_COLOR = new Color(239, 83, 80);
 
-    // ==================== PHUONG THUC MANG ====================
-
+    //PHUONG THUC MANG
     /**
      * Ket noi den server.
      */
@@ -71,7 +59,7 @@ public class client {
     }
 
     /**
-     * Gui tin nhan va cho phan hoi tu server (dong bo).
+     * Gui tin nhan va cho phan hoi tu server.
      */
     public String Client_SendAndReceive(String message) throws IOException {
         out.println(message);
@@ -79,7 +67,7 @@ public class client {
     }
 
     /**
-     * Cho nhan 1 tin nhan tu server (blocking).
+     * Cho nhan 1 tin nhan tu server.
      */
     public String Client_WaitMessage() throws IOException {
         return in.readLine();
@@ -99,7 +87,7 @@ public class client {
         }
     }
 
-    // ==================== GIAO DIEN DANG NHAP ====================
+    //GIAO DIEN DANG NHAP
 
     /**
      * Hien thi cua so dang nhap.
@@ -117,7 +105,7 @@ public class client {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
-        // === Tieu de ===
+        //Tieu de
         JLabel title = new JLabel("CỜ CARO");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(ACCENT);
@@ -131,7 +119,6 @@ public class client {
         mainPanel.add(subtitle);
         mainPanel.add(Box.createVerticalStrut(30));
 
-        // === Form ===
         // Server address
         mainPanel.add(createLabel("ĐỊA CHỈ SERVER"));
         mainPanel.add(Box.createVerticalStrut(5));
@@ -166,7 +153,7 @@ public class client {
         mainPanel.add(passField);
         mainPanel.add(Box.createVerticalStrut(28));
 
-        // === Nut ket noi ===
+        //Nut ket noi 
         JButton connectBtn = new JButton("KẾT NỐI & CHƠI");
         connectBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         connectBtn.setForeground(Color.WHITE);
@@ -190,14 +177,14 @@ public class client {
         mainPanel.add(connectBtn);
         mainPanel.add(Box.createVerticalStrut(18));
 
-        // === Status label ===
+        //Status label
         JLabel statusLabel = new JLabel(" ");
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         statusLabel.setForeground(TEXT_DIM);
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         mainPanel.add(statusLabel);
 
-        // === Xu ly nut ket noi ===
+        //Xu ly nut ket noi
         connectBtn.addActionListener(e -> {
             // Doc input
             String host = hostField.getText().trim();
@@ -238,7 +225,7 @@ public class client {
         loginFrame.setVisible(true);
     }
 
-    // ==================== LOGIC KET NOI VA CHOI ====================
+    // LOGIC KET NOI VA CHOI
 
     /**
      * Ket noi den server, dang ky, dang nhap, cho doi thu, mo ban co.
@@ -321,7 +308,7 @@ public class client {
         }
     }
 
-    // ==================== NHAN NUOC DI TU DOI THU ====================
+    // NHAN NUOC DI TU DOI THU
 
     /**
      * Luong lien tuc nhan du lieu tu server.
@@ -372,7 +359,7 @@ public class client {
         }).start();
     }
 
-    // ==================== HELPER UI ====================
+    //HELPER UI
 
     private void showStatus(JLabel label, String text, Color color) {
         SwingUtilities.invokeLater(() -> {
@@ -406,7 +393,7 @@ public class client {
         return label;
     }
 
-    // ==================== MAIN ====================
+    //MAIN
 
     /**
      * Khoi chay ung dung client.
