@@ -4,7 +4,7 @@ import json
 import os
 
 class Server:
-    def __init__(self, host='localhost', port=12345):
+    def __init__(self, host='0.0.0.0', port=12345):
         self.host = host
         self.port = port
         self.clients = [] #them danh sach client
@@ -12,9 +12,17 @@ class Server:
         self.users_file = 'users.json' #file luu thong tin user
         self.users = self.load_users() 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # cho phep tai su dung port
         self.socket.bind((self.host, self.port))
         self.socket.listen() 
+        # Hien thi IP de may khac ket noi
+        try:
+            local_ip = socket.gethostbyname(socket.gethostname())
+        except:
+            local_ip = '127.0.0.1'
         print(f'Server is listening on {self.host}:{self.port}')
+        print(f'Dia chi IP cua server: {local_ip}:{self.port}')
+        print(f'Hay dung IP nay de ket noi tu may khac!')
     #luu thong tin user vao file
     def load_users(self):
         if not os.path.exists(self.users_file):
@@ -84,23 +92,35 @@ class Server:
                         break
                 else:
                     print(f'Unknown command from {addr}: {data_str}')
-    # handle player
+    # handle player — relay song song 2 chieu (khong bi ket khi game ket thuc)
     def handle_game(self, p1, p2):
         print("Game start giua 2 player")
-        try:
-            while True:
-                data = p1.recv(1024)
-                if not data: break
-                p2.sendall(data)
-                data = p2.recv(1024)
-                if not data: break
-                p1.sendall(data)
-        except Exception as e:
-            print(f"Game error: {e}")
-        finally:
-            p1.close()
-            p2.close()
-            print("Game end")
+        done = threading.Event()
+
+        def relay(src, dst, name):
+            try:
+                while True:
+                    data = src.recv(1024)
+                    if not data:
+                        break
+                    dst.sendall(data)
+            except Exception as e:
+                print(f"Relay {name} error: {e}")
+            finally:
+                done.set()
+
+        t1 = threading.Thread(target=relay, args=(p1, p2, "P1->P2"), daemon=True)
+        t2 = threading.Thread(target=relay, args=(p2, p1, "P2->P1"), daemon=True)
+        t1.start()
+        t2.start()
+
+        # Cho den khi 1 ben ngat ket noi
+        done.wait()
+        try: p1.close()
+        except: pass
+        try: p2.close()
+        except: pass
+        print("Game end")
     def Sever_Stop(self):
         self.socket.close()
 if __name__ == "__main__":
