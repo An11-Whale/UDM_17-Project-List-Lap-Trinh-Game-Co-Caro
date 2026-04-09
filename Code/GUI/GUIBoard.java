@@ -8,13 +8,13 @@ import java.awt.geom.*;
 
 public class GUIBoard extends JFrame {
 
-    // ==================== HANG SO BAN CO ====================
+    
     public static final int BOARD_SIZE = 15;
     private static final int CELL_SIZE = 42;
     private static final int BOARD_PADDING = 30;
     private static final int INFO_PANEL_WIDTH = 230;
 
-    // ==================== BANG MAU ====================
+    //BANG MAU
     // Nen tong the
     private static final Color COLOR_BG = new Color(18, 18, 35);
     // Panel thong tin
@@ -41,7 +41,7 @@ public class GUIBoard extends JFrame {
     private static final Color COLOR_TEXT_DIM = new Color(140, 140, 160);
     private static final Color COLOR_ACCENT = new Color(126, 87, 194);
 
-    // ==================== TRANG THAI GAME ====================
+    //TRANG THAI GAME
     private int[][] board;          // 0 = trong, 1 = X, 2 = O
     private boolean myTurn;         // true = luot minh
     private int myMark;             // 1 = X, 2 = O
@@ -54,7 +54,7 @@ public class GUIBoard extends JFrame {
     private String playerXName = "Player X";
     private String playerOName = "Player O";
 
-    // ==================== THANH PHAN UI ====================
+    //THANH PHAN UI
     private BoardPanel boardPanel;
     private JLabel statusLabel;
     private JLabel moveCountLabel;
@@ -62,7 +62,7 @@ public class GUIBoard extends JFrame {
     private JLabel xTurnDot, oTurnDot;
     private JButton newGameBtn;
 
-    // ==================== CALLBACK KET NOI MANG ====================
+    //CALLBACK KET NOI MANG
     /**
      * Interface de gui nuoc di qua mang.
      * Khi nguoi choi click vao ban co, onMoveMade() se duoc goi.
@@ -78,11 +78,6 @@ public class GUIBoard extends JFrame {
     private boolean myNewGameReady = false;
     private boolean opponentNewGameReady = false;
 
-    // ==================== CONSTRUCTOR ====================
-    /**
-     * Tao ban co moi.
-     * @param myMark 1 = choi X (di truoc), 2 = choi O (di sau)
-     */
     public GUIBoard(int myMark) {
         this.myMark = myMark;
         this.myTurn = (myMark == 1); // X luon di truoc
@@ -90,7 +85,7 @@ public class GUIBoard extends JFrame {
         initUI();
     }
 
-    // ==================== KHOI TAO GIAO DIEN ====================
+    //KHOI TAO GIAO DIEN
     private void initUI() {
         setTitle("Cờ Caro — Gomoku");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -186,7 +181,7 @@ public class GUIBoard extends JFrame {
                 resetBoard();
             }
         });
-        // Hover effect cho nut
+        // Hieu ung cho nut
         newGameBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -308,7 +303,7 @@ public class GUIBoard extends JFrame {
         }
     }
 
-    // ==================== PANEL BAN CO ====================
+    //PANEL BAN CO
     /**
      * Panel ve ban co va xu ly su kien chuot.
      */
@@ -585,8 +580,7 @@ public class GUIBoard extends JFrame {
         }
     }
 
-    // ==================== XU LY LOGIC ====================
-
+    //XU LY LOGIC
     /**
      * Xu ly khi nguoi choi click vao o.
      */
@@ -641,15 +635,6 @@ public class GUIBoard extends JFrame {
         moveCount++;
     }
 
-    /**
-     * Nhan nuoc di tu doi thu (goi tu luong mang).
-     * Phuong thuc nay an toan voi Swing thread (su dung invokeLater).
-     * Neu board dang trong trang thai gameOver (chuyen giao van moi),
-     * nuoc di se duoc luu lai va ap dung sau khi resetBoard.
-     *
-     * @param row hang (0-14)
-     * @param col cot (0-14)
-     */
     public void receiveOpponentMove(int row, int col) {
         SwingUtilities.invokeLater(() -> {
             if (gameOver) {
@@ -689,8 +674,7 @@ public class GUIBoard extends JFrame {
         boardPanel.repaint();
     }
 
-    // ==================== KIEM TRA THANG ====================
-
+    //KIEM TRA THANG 
     /**
      * Kiem tra co 5 quan lien tiep khong.
      * Kiem tra 4 huong: ngang, doc, cheo phai, cheo trai.
@@ -756,8 +740,7 @@ public class GUIBoard extends JFrame {
         return null;
     }
 
-    // ==================== API CONG KHAI ====================
-
+    //API CONG KHAI
     /**
      * Dat callback khi nguoi choi thuc hien nuoc di.
      */
@@ -874,7 +857,7 @@ public class GUIBoard extends JFrame {
         });
     }
 
-    // ==================== CHE DO TEST LOCAL ====================
+    //CHE DO TEST LOCAL
     /**
      * Chay doc lap de test giao dien.
      * Che do 2 nguoi choi tren cung 1 ban co (X va O luan phien).
