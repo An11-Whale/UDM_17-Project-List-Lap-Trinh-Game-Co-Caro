@@ -1,2 +1,2 @@
-package Code.client.gui;
+package Code.Client.Gui;
 

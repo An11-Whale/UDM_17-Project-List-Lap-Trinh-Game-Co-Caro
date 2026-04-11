@@ -1,4 +1,4 @@
-package Code.client.game;
+package Code.Client.Game;
 
 public class Board {
     

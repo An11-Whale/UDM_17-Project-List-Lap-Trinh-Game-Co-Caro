@@ -1,4 +1,4 @@
-package Code.client.history;
+package Code.Client.History;
 
 public class HistoryUI {
     
