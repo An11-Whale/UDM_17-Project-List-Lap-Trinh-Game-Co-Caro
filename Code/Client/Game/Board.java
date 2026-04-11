@@ -20,8 +20,14 @@ public class Board {
             }
         }
     }
+    // check boundary
+    public boolean isValid(int row, int col) {
+        return row >= 0 && row < size && col >= 0 && col < size; //kiểm tra xem có nằm trong ma trận vùng chơi k
+    }
 
     public boolean place(int row, int col, int player) {
+        if (!isValid(row, col)) return false;
+
         if (board[row][col] == 0) {
             board[row][col] = player;
             return true;
@@ -32,4 +38,8 @@ public class Board {
     public int getCell(int row, int col) {
         return board[row][col];
     }
+    //getSize cho UI
+    public int getSize() {
+    return size;
+}
 }
