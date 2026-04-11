@@ -1,10 +1,9 @@
-package Code.client.gui;
-package Code.client.gui.GUI_Timer;
+package Code.Client.Gui;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
 
-public class GUI_Timer extends JFrame {
+public class TimerUI extends JFrame {
     private JLabel lblTimer;
     private JButton btnSwitchTurn, btnStart;
 
@@ -13,7 +12,7 @@ public class GUI_Timer extends JFrame {
 
     private Timer timer;
 
-    public GUI_Timer() {
+    public TimerUI() {
         setTitle("Caro Timer");
         setSize(300, 200);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -40,7 +39,7 @@ public class GUI_Timer extends JFrame {
 
             if (time == 0) {
                 timer.stop();
-                JOptionPane.showMessageDialog(GUI_Timer.this,
+                JOptionPane.showMessageDialog(TimerUI.this,
                         "Player " + currentPlayer + " het thoi gian! Thua!");
             }
         });
@@ -64,7 +63,7 @@ public class GUI_Timer extends JFrame {
         }
 
     public static void main(String[] args) {
-        new GUI_Timer().setVisible(true);
+        new TimerUI().setVisible(true);
     }
 }
 

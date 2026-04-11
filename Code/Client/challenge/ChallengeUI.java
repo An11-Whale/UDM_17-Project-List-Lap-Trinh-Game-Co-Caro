@@ -1,4 +1,4 @@
-package Code.client.challenge;
+package Code.Client.challenge;
 
 public class ChallengeUI {
     

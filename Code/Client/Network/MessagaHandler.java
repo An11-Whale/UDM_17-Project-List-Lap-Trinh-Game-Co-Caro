@@ -1,2 +1,1 @@
-package Code.client.network;
-package Code.client.Network;
+package Code.Client.Network;
