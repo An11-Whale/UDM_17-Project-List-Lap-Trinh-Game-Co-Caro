@@ -1,5 +1,5 @@
-package Code.Client.Game;
+package Code.client.game;
 
-public class Player {
+public class player {
     
 }

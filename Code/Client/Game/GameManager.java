@@ -1,5 +1,5 @@
 package Code.client.game;
 
-public class Board {
+public class GameManager {
     
 }
