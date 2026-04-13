@@ -1,50 +1,39 @@
 package Code.Client.Network;
 
-import java.io.*;
-import java.net.*;
-
 public class ClientSocket {
 
-    private Socket socket;
-    private DataInputStream dis;
-    private DataOutputStream dos;
+    public static void main(String[] args) {
 
-    public boolean connect(String host, int port) {
-        try {
-            socket = new Socket();
-            socket.connect(new InetSocketAddress(host, port), 4000);
+        SocketHandler socket = new SocketHandler();
 
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
+        socket.setListener(new SocketHandler.SocketListener() {
 
-            System.out.println("Connected to server!");
-            return true;
+            @Override
+            public void onConnected() {
+                System.out.println("Connected");
+                socket.login("HP4", "hhhuuuhhhhh");
+            }
 
-        } catch (IOException e) {
-            System.out.println("Connect failed: " + e.getMessage());
-            return false;
-        }
-    }
+            @Override
+            public void onLogin(boolean success, String message) {
+                System.out.println(message);
+            }
 
-    public void send(String data) {
-        try {
-            dos.writeUTF(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+            @Override
+            public void onMessage(String msg) {
+                System.out.println("Server: " + msg);
+            }
 
-    public String receive() throws IOException {
-        return dis.readUTF();
-    }
+            @Override
+            public void onDisconnected() {
+                System.out.println("Disconnected");
+            }
+        });
 
-    public void close() {
-        try {
-            socket.close();
-            dis.close();
-            dos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        boolean ok = socket.connect("localhost", 9999);
+
+        if (!ok) {
+            System.out.println("Cannot connect to server");
         }
     }
 }

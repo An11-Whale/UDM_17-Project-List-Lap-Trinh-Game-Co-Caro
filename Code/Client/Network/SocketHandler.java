@@ -1,119 +1,105 @@
 package Code.Client.Network;
 
-import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 public class SocketHandler {
 
-    private ClientSocket client;
-    private Thread listener;
+    private Socket socket;
+    private InputStream is;
+    private OutputStream os;
+    private Thread listenerThread;
 
-    public SocketHandler(ClientSocket client) {
-        this.client = client;
+    private SocketListener listener;
+
+    public interface SocketListener {
+        void onConnected();
+        void onLogin(boolean success, String message);
+        void onMessage(String msg);
+        void onDisconnected();
     }
 
-    public void startListening() {
-        listener = new Thread(() -> {
-            while (true) {
-                try {
-                    String data = client.receive();
-                    System.out.println("RECEIVED: " + data);
-                    handle(data);
+    public void setListener(SocketListener listener) {
+        this.listener = listener;
+    }
 
-                } catch (IOException e) {
-                    System.out.println("Disconnected from server!");
-                    break;
+    public boolean connect(String host, int port) {
+        try {
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(host, port), 4000);
+
+            is = socket.getInputStream();
+            os = socket.getOutputStream();
+
+            listenerThread = new Thread(this::listen);
+            listenerThread.start();
+
+            if (listener != null) listener.onConnected();
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void listen() {
+        byte[] buffer = new byte[1024];
+        boolean running = true;
+
+        while (running) {
+            try {
+                int read = is.read(buffer);
+                if (read == -1) break;
+
+                String msg = new String(buffer, 0, read);
+                String[] lines = msg.split("\n");
+
+                for (String line : lines) {
+                    line = line.trim();
+
+                    if (line.isEmpty()) continue;
+
+                    if (line.contains("Login success")) {
+                        if (listener != null) listener.onLogin(true, line);
+                    } else if (line.contains("Error")) {
+                        if (listener != null) listener.onLogin(false, line);
+                    } else {
+                        if (listener != null) listener.onMessage(line);
+                    }
                 }
+
+            } catch (Exception e) {
+                running = false;
             }
-        });
-        listener.start();
+        }
+
+        close();
     }
-    
-    private void handle(String data) {
-        String[] parts = data.split(";");
-        String type = parts[0];
 
-        switch (type) {
+    public void login(String user, String pass) {
+        send("LOGIN " + user + " " + pass);
+    }
 
-            case "LOGIN":
-                handleLogin(parts);
-                break;
+    public void register(String user, String pass) {
+        send("REGISTER " + user + " " + pass);
+    }
 
-            case "SIGNUP":
-                handleSignup(parts);
-                break;
-
-            case "LIST_ROOM":
-                handleListRoom(parts);
-                break;
-
-            case "JOIN_ROOM":
-                handleJoinRoom(parts);
-                break;
-
-            case "CHAT":
-                handleChat(parts);
-                break;
-
-            case "MOVE":
-                handleMove(parts);
-                break;
-
-            default:
-                System.out.println("Unknown type: " + type);
+    public void send(String data) {
+        try {
+            os.write((data + "\n").getBytes());
+            os.flush();
+        } catch (Exception e) {
         }
     }
 
-    // ================= EVENT =================
-    private void handleLogin(String[] data) {
-        String status = data[1];
-
-        if (status.equals("success")) {
-            System.out.println("Login success: " + data[2]);
-        } else {
-            System.out.println("Login failed: " + data[2]);
+    public void close() {
+        try {
+            if (socket != null) socket.close();
+        } catch (Exception e) {
         }
-    }
 
-    private void handleSignup(String[] data) {
-        String status = data[1];
-
-        if (status.equals("success")) {
-            System.out.println("Signup success");
-        } else {
-            System.out.println("Signup failed: " + data[2]);
-        }
-    }
-
-    private void handleListRoom(String[] data) {
-        int count = Integer.parseInt(data[1]);
-        System.out.println("Room list:");
-
-        int index = 2;
-        for (int i = 0; i < count; i++) {
-            String roomId = data[index++];
-            String name = data[index++];
-            String players = data[index++];
-
-            System.out.println(roomId + " | " + name + " | " + players);
-        }
-    }
-
-    private void handleJoinRoom(String[] data) {
-        String roomId = data[1];
-        System.out.println("Joined room: " + roomId);
-    }
-
-    private void handleChat(String[] data) {
-        String user = data[1];
-        String msg = data[2];
-
-        System.out.println(user + ": " + msg);
-    }
-
-    private void handleMove(String[] data) {
-        int x = Integer.parseInt(data[1]);
-        int y = Integer.parseInt(data[2]);
-
-        System.out.println("Move at: " + x + ", " + y);
+        if (listener != null) listener.onDisconnected();
     }
 }
