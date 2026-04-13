@@ -1,10 +1,11 @@
 package Code.Client.Game;
 
-import Code.Client.Network.ClientSocket;
+
+import Code.Client.Network.SocketHandler;
 
 public class GameManager {
     private Board board;
-    private ClientSocket client;
+    private SocketHandler client;
 
     private int currentPlayer;   //player đang đi
     private int myPlayerId;      //player của mình
@@ -16,6 +17,8 @@ public class GameManager {
         void onWin(int player);
         void onLose();
         void onMove(int row, int col, int player);
+        void onDraw();
+        void onReset(); 
     }
     private GameListener listener;
 
@@ -23,7 +26,7 @@ public class GameManager {
         this.listener = listener;
     }
 
-    public GameManager(ClientSocket client, int myPlayerId) {
+    public GameManager(SocketHandler client, int myPlayerId) {
         this.board = new Board();
         this.client = client;
         this.myPlayerId = myPlayerId;
@@ -37,40 +40,46 @@ public class GameManager {
         if (isGameOver) return false;
         if (!isMyTurn) return false;
 
-        //đặt quân
-        boolean success = board.place(row, col, myPlayerId);
-        if (!success) return false;
-
-        //gửi lên server
         client.sendMove(row, col);
 
-        //check win
-        if (checkWin(row, col)) {
-            isGameOver = true;
-            
-            if (listener != null) {
-                listener.onWin(myPlayerId);
-            }
-        }
-        switchTurn();
         return true;
     }
-    //nhận move từ server
-    public void onOpponentMove(int row, int col) {
+    //nhận move từ server(đã xóa onOpponentMove code cũ)
+    public void onServerMove(int row, int col, int player) {
         if (isGameOver) return;
 
-        int opponentId = (myPlayerId == 1) ? 2 : 1;
+        boolean success = board.place(row, col, player);
+        if (!success) return;
 
-        board.place(row, col, opponentId);
+        if (listener != null) {
+            listener.onMove(row, col, player);
+        }
 
         if (checkWin(row, col)) {
             isGameOver = true;
+
             if (listener != null) {
-                listener.onLose();
+                if (player == myPlayerId) {
+                    listener.onWin(player);
+                } else {
+                    listener.onLose();
+                }
+            }
+
+        } else if (isBoardFull()) {
+            isGameOver = true;
+
+            if (listener != null) {
+                listener.onDraw();
             }
         }
-        switchTurn();
+
+        if (!isGameOver) {
+            switchTurn();
+        }
     }
+
+
     //đổi lượt
     public void switchTurn() {
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
@@ -79,18 +88,19 @@ public class GameManager {
     //check win
     public boolean checkWin(int row, int col) {
         int player = board.getCell(row, col);
+        if (player == 0) return false; //tránh player == 0
 
         return count(row, col, 1, 0, player)   //ngang
-             + count(row, col, -1, 0, player) > 4 ||
+             + count(row, col, -1, 0, player) >= 4 ||
 
                count(row, col, 0, 1, player)   //dọc
-             + count(row, col, 0, -1, player) > 4 ||
+             + count(row, col, 0, -1, player) >= 4 ||
 
                count(row, col, 1, 1, player)   //chéo \
-             + count(row, col, -1, -1, player) > 4 ||
+             + count(row, col, -1, -1, player) >= 4 ||
 
                count(row, col, 1, -1, player)  //chéo /
-             + count(row, col, -1, 1, player) > 4;
+             + count(row, col, -1, 1, player) >= 4;
     }
 
     private int count(int row, int col, int dRow, int dCol, int player) {
@@ -109,6 +119,32 @@ public class GameManager {
 
         return cnt;
     }
+
+    //check hòa
+    private boolean isBoardFull() {
+        for (int i = 0; i < board.getSize(); i++) {
+            for (int j = 0; j < board.getSize(); j++) {
+                if (board.getCell(i, j) == 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    //reset game cho UI
+    public void resetGame() {
+        board.reset();
+        isGameOver = false;
+
+        currentPlayer = 1;
+        isMyTurn = (myPlayerId == currentPlayer);
+
+        if (listener != null) {
+            listener.onReset();
+        }
+    }
+
     //getter
     public Board getBoard() {
         return board;
@@ -120,5 +156,13 @@ public class GameManager {
 
     public boolean isGameOver() {
         return isGameOver;
+    }
+
+    public int[][] getBoardData() {
+        return board.getBoard();
+    }
+
+    public int getMyPlayerId() {
+        return myPlayerId;
     }
 }

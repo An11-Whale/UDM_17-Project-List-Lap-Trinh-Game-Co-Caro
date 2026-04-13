@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import Code.Client.Game.GameManager;
+
 public class SocketHandler {
 
     private Socket socket;
@@ -19,6 +21,13 @@ public class SocketHandler {
         void onLogin(boolean success, String message);
         void onMessage(String msg);
         void onDisconnected();
+        void onGameStart(int myId);
+    }
+
+    private GameManager gameManager;
+
+    public void setGameManager(GameManager gameManager) {
+        this.gameManager = gameManager;
     }
 
     public void setListener(SocketListener listener) {
@@ -44,38 +53,71 @@ public class SocketHandler {
         }
     }
 
+    private void handleMessage(String line) {
+        if (line.isEmpty()) return;
+
+        String[] parts = line.split(" ");
+
+        switch (parts[0]) {
+            case "LOGIN_SUCCESS":
+                if (listener != null) {
+                    listener.onLogin(true, "OK");
+                }
+                break;
+
+            case "LOGIN_ERROR":
+                if (listener != null) {
+                    listener.onLogin(false, parts.length > 1 ? parts[1] : "");
+                }
+                break;
+
+            case "MOVE":
+                int row = Integer.parseInt(parts[1]);
+                int col = Integer.parseInt(parts[2]);
+                int player = Integer.parseInt(parts[3]);
+
+                if (gameManager != null) {
+                    gameManager.onServerMove(row, col, player);
+                }
+                break;
+
+            case "START":
+                int myId = Integer.parseInt(parts[1]);
+
+                if (listener != null) {
+                    listener.onGameStart(myId);
+                }
+                break;
+
+            default:
+                if (listener != null) {
+                    listener.onMessage(line);
+                }
+        }
+    }
+
     private void listen() {
         byte[] buffer = new byte[1024];
-        boolean running = true;
+        StringBuilder sb = new StringBuilder();
 
-        while (running) {
-            try {
+        try {
+            while (true) {
                 int read = is.read(buffer);
                 if (read == -1) break;
 
-                String msg = new String(buffer, 0, read);
-                String[] lines = msg.split("\n");
+                sb.append(new String(buffer, 0, read));
 
-                for (String line : lines) {
-                    line = line.trim();
+                int index;
+                while ((index = sb.indexOf("\n")) != -1) {
+                    String line = sb.substring(0, index).trim();
+                    sb.delete(0, index + 1);
 
-                    if (line.isEmpty()) continue;
-
-                    if (line.contains("Login success")) {
-                        if (listener != null) listener.onLogin(true, line);
-                    } else if (line.contains("Error")) {
-                        if (listener != null) listener.onLogin(false, line);
-                    } else {
-                        if (listener != null) listener.onMessage(line);
-                    }
+                    handleMessage(line);
                 }
-
-            } catch (Exception e) {
-                running = false;
             }
-        }
-
-        close();
+        } catch (Exception e) {
+    }
+    close();
     }
 
     public void login(String user, String pass) {
@@ -101,5 +143,9 @@ public class SocketHandler {
         }
 
         if (listener != null) listener.onDisconnected();
+    }
+
+    public void sendMove(int row, int col) {
+        send("MOVE " + row + " " + col);
     }
 }
