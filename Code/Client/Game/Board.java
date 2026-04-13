@@ -4,6 +4,14 @@ public class Board {
     private int[][] board;
     private int size=15;
 
+    public int[][] getBoard() {
+        int[][] copy = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            System.arraycopy(board[i], 0, copy[i], 0, size);
+        }
+        return copy;
+    }
+
     public Board() {
         board = new int[this.size][this.size];
         for (int i = 0; i < this.size; i++) {
