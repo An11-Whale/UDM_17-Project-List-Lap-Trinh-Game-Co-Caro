@@ -15,6 +15,10 @@ public class ClientSocket {
 
     private ClientListener listener;
 
+    public SocketHandler getSocketHandler() {
+        return socket;
+    }
+
     public void setListener(ClientListener listener) {
         this.listener = listener;
     }
