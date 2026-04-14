@@ -18,37 +18,132 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     private int myPlayerId = PLAYER_X;
     private Runnable lobbyCallback;
     private ClientSocket client;
+    private String myUsername = "Player";
+    private String opponentName = "Opponent";
 
     public BoardUI() {
         initComponents();
         setupDarkTheme();
         createBoard();
+        setupTimer();
     }
 
-    public BoardUI(String username, ClientSocket client, int myPlayerId) {
+    public BoardUI(String username, ClientSocket client, int myPlayerId, String opponentName) {
         this.client = client;
         this.myPlayerId = myPlayerId;
+        this.myUsername = username;
+        this.opponentName = opponentName;
         initComponents();
         setupDarkTheme();
         createBoard();
+        setupTimer();
+
+        // Dat ten player
+        if (myPlayerId == PLAYER_X) {
+            setPlayerNames(username, opponentName);
+        } else {
+            setPlayerNames(opponentName, username);
+        }
 
         if (this.client != null) {
             GameManager gm = new GameManager(client.getSocketHandler(), myPlayerId);
             setGameManager(gm);
             client.getSocketHandler().setGameManager(gm);
-            
+
             client.setListener(new ClientSocket.ClientListener() {
-                @Override public void onConnected() {}
-                @Override public void onLogin(boolean success, String message) {}
-                @Override public void onGameStart(int myId) {}
-                @Override public void onMove(int row, int col, int player) {} 
-                @Override public void onMessage(String msg) {}
-                @Override public void onDisconnected() {
-                    javax.swing.JOptionPane.showMessageDialog(BoardUI.this,
-                            "Mất kết nối với Server!", "Lỗi", javax.swing.JOptionPane.ERROR_MESSAGE);
+                @Override
+                public void onConnected() {
+                }
+
+                @Override
+                public void onLogin(boolean success, String message) {
+                }
+
+                @Override
+                public void onGameStart(int myId, String opName) {
+                }
+
+                @Override
+                public void onMove(int row, int col, int player) {
+                }
+
+                @Override
+                public void onMessage(String msg) {
+                }
+
+                @Override
+                public void onPlayersList(String[] players) {
+                }
+
+                @Override
+                public void onChallengeFrom(String fromUser) {
+                }
+
+                @Override
+                public void onChallengeAccepted() {
+                }
+
+                @Override
+                public void onChallengeDeclined(String byUser) {
+                }
+
+                @Override
+                public void onHistoryData(String data) {
+                }
+
+                @Override
+                public void onOpponentSurrendered() {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        if (timerPanel != null)
+                            timerPanel.stopTimer();
+                        if (gameManager != null)
+                            gameManager.forceGameOver();
+                        javax.swing.JOptionPane.showMessageDialog(BoardUI.this,
+                                "Đối thủ đã đầu hàng!\nBạn thắng!", "Kết thúc",
+                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                        returnToLobby();
+                    });
+                }
+
+                @Override
+                public void onDisconnected() {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        if (timerPanel != null)
+                            timerPanel.stopTimer();
+                        javax.swing.JOptionPane.showMessageDialog(BoardUI.this,
+                                "Mất kết nối với Server!", "Lỗi", javax.swing.JOptionPane.ERROR_MESSAGE);
+                        dispose();
+                        new LoginUI().setVisible(true);
+                    });
                 }
             });
+
+            // Player 1 di truoc -> start timer
+            timerPanel.resetTurn(1);
         }
+    }
+
+    private void setupTimer() {
+        timerPanel = new TimerUI(60);
+        timerPanel.setTimerListener(this);
+
+        // Chen timerPanel vao giua headerPanel va boardContainer
+        getContentPane().add(timerPanel, java.awt.BorderLayout.NORTH);
+
+        // Chuyen headerPanel sang trong timerPanel phia tren
+        getContentPane().remove(headerPanel);
+
+        // Tao wrapper panel chua header + timer
+        javax.swing.JPanel topPanel = new javax.swing.JPanel();
+        topPanel.setLayout(new javax.swing.BoxLayout(topPanel, javax.swing.BoxLayout.Y_AXIS));
+        topPanel.setBackground(new java.awt.Color(18, 22, 36));
+        topPanel.add(headerPanel);
+        topPanel.add(timerPanel);
+
+        getContentPane().add(topPanel, java.awt.BorderLayout.NORTH);
+
+        pack();
+        setLocationRelativeTo(null);
     }
 
     private void setupDarkTheme() {
@@ -60,8 +155,6 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         lblPlayer1.setForeground(new java.awt.Color(80, 200, 255));
         lblVs.setForeground(new java.awt.Color(120, 130, 160));
         lblPlayer2.setForeground(new java.awt.Color(255, 100, 100));
-        lblTimer1.setForeground(new java.awt.Color(50, 200, 80));
-        lblTimer2.setForeground(new java.awt.Color(120, 130, 160));
         btnBack.setBackground(new java.awt.Color(45, 52, 78));
         btnBack.setForeground(java.awt.Color.WHITE);
         btnBack.setFocusPainted(false);
@@ -95,7 +188,8 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     }
 
     private void handleCellClick(int row, int col) {
-        if (!boardButtons[row][col].getText().isEmpty()) return;
+        if (!boardButtons[row][col].getText().isEmpty())
+            return;
         if (gameManager != null) {
             gameManager.makeMove(row, col);
         } else {
@@ -105,14 +199,16 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     }
 
     public void updateBoardUI(int row, int col, int playerId) {
-        javax.swing.JButton btn = boardButtons[row][col];
-        if (playerId == PLAYER_X) {
-            btn.setText("X");
-            btn.setForeground(new java.awt.Color(80, 200, 255));
-        } else {
-            btn.setText("O");
-            btn.setForeground(new java.awt.Color(255, 100, 100));
-        }
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            javax.swing.JButton btn = boardButtons[row][col];
+            if (playerId == PLAYER_X) {
+                btn.setText("X");
+                btn.setForeground(new java.awt.Color(80, 200, 255));
+            } else {
+                btn.setText("O");
+                btn.setForeground(new java.awt.Color(255, 100, 100));
+            }
+        });
     }
 
     public void resetBoard() {
@@ -123,10 +219,13 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
             }
         }
         currentPlayer = PLAYER_X;
+        if (timerPanel != null)
+            timerPanel.resetTimer();
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         headerPanel = new javax.swing.JPanel();
@@ -134,19 +233,17 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         lblPlayer1 = new javax.swing.JLabel();
         lblVs = new javax.swing.JLabel();
         lblPlayer2 = new javax.swing.JLabel();
-        lblTimer1 = new javax.swing.JLabel();
-        lblTimer2 = new javax.swing.JLabel();
         btnSurrender = new javax.swing.JButton();
         boardContainer = new javax.swing.JPanel();
         boardPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Caro Game");
-        setMinimumSize(new java.awt.Dimension(700, 720));
-        setPreferredSize(new java.awt.Dimension(700, 720));
+        setMinimumSize(new java.awt.Dimension(700, 780));
+        setPreferredSize(new java.awt.Dimension(700, 780));
         setResizable(false);
 
-        headerPanel.setPreferredSize(new java.awt.Dimension(700, 60));
+        headerPanel.setPreferredSize(new java.awt.Dimension(700, 50));
         headerPanel.setLayout(null);
 
         btnBack.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -158,35 +255,24 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
             }
         });
         headerPanel.add(btnBack);
-        btnBack.setBounds(10, 15, 80, 30);
+        btnBack.setBounds(10, 10, 80, 30);
 
         lblPlayer1.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         lblPlayer1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         lblPlayer1.setText("Player 1");
         headerPanel.add(lblPlayer1);
-        lblPlayer1.setBounds(150, 8, 150, 22);
+        lblPlayer1.setBounds(150, 12, 150, 22);
 
         lblVs.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblVs.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblVs.setText("VS");
         headerPanel.add(lblVs);
-        lblVs.setBounds(310, 8, 40, 22);
+        lblVs.setBounds(310, 12, 40, 22);
 
         lblPlayer2.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         lblPlayer2.setText("Player 2");
         headerPanel.add(lblPlayer2);
-        lblPlayer2.setBounds(360, 8, 150, 22);
-
-        lblTimer1.setFont(new java.awt.Font("Consolas", 1, 14)); // NOI18N
-        lblTimer1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        lblTimer1.setText("01:00");
-        headerPanel.add(lblTimer1);
-        lblTimer1.setBounds(220, 33, 80, 20);
-
-        lblTimer2.setFont(new java.awt.Font("Consolas", 1, 14)); // NOI18N
-        lblTimer2.setText("01:00");
-        headerPanel.add(lblTimer2);
-        lblTimer2.setBounds(360, 33, 80, 20);
+        lblPlayer2.setBounds(360, 12, 150, 22);
 
         btnSurrender.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnSurrender.setText("Đầu hàng");
@@ -197,7 +283,7 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
             }
         });
         headerPanel.add(btnSurrender);
-        btnSurrender.setBounds(570, 15, 100, 30);
+        btnSurrender.setBounds(570, 10, 100, 30);
 
         getContentPane().add(headerPanel, java.awt.BorderLayout.NORTH);
 
@@ -212,44 +298,83 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackActionPerformed
+    private void returnToLobby() {
+        if (timerPanel != null)
+            timerPanel.stopTimer();
+        dispose();
+        if (lobbyCallback != null)
+            lobbyCallback.run();
+    }
+
+    private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnBackActionPerformed
+        if (gameManager != null && gameManager.isGameOver()) {
+            returnToLobby();
+            return;
+        }
+
         int choice = javax.swing.JOptionPane.showConfirmDialog(this,
                 "Thoát trận đấu?", "Xác nhận", javax.swing.JOptionPane.YES_NO_OPTION);
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
-            dispose();
-            if (lobbyCallback != null) lobbyCallback.run();
+            returnToLobby();
         }
-    }//GEN-LAST:event_btnBackActionPerformed
+    }// GEN-LAST:event_btnBackActionPerformed
 
-    private void btnSurrenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSurrenderActionPerformed
+    private void btnSurrenderActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnSurrenderActionPerformed
+        if (gameManager != null && gameManager.isGameOver()) {
+            return;
+        }
+
         int choice = javax.swing.JOptionPane.showConfirmDialog(this,
                 "Bạn chắc chắn muốn đầu hàng?\nBạn sẽ thua trận này!",
                 "Đầu hàng", javax.swing.JOptionPane.YES_NO_OPTION,
                 javax.swing.JOptionPane.WARNING_MESSAGE);
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
-            // TODO: Gửi SURRENDER lên server qua GameManager
-            if (client != null) client.getSocketHandler().send("SURRENDER");
-            String winner = (myPlayerId == PLAYER_X) ? "Player O" : "Player X";
+            if (timerPanel != null)
+                timerPanel.stopTimer();
+            if (gameManager != null)
+                gameManager.forceGameOver();
+
+            // Gui SURRENDER len server
+            if (client != null) {
+                client.getSocketHandler().send("SURRENDER");
+            }
+            String winner = (myPlayerId == PLAYER_X) ? lblPlayer2.getText() : lblPlayer1.getText();
             javax.swing.JOptionPane.showMessageDialog(this,
                     "Bạn đã đầu hàng!\n" + winner + " thắng!",
                     "Kết thúc", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            dispose();
-            if (lobbyCallback != null) lobbyCallback.run();
+            returnToLobby();
         }
-    }//GEN-LAST:event_btnSurrenderActionPerformed
+    }// GEN-LAST:event_btnSurrenderActionPerformed
 
     // GameManager.GameListener
     @Override
     public void onWin(int playerId) {
-        String winner = (playerId == PLAYER_X) ? lblPlayer1.getText() : lblPlayer2.getText();
-        javax.swing.JOptionPane.showMessageDialog(this, winner + " thắng!", "Kết thúc",
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (timerPanel != null)
+                timerPanel.stopTimer();
+            String winner = (playerId == PLAYER_X) ? lblPlayer1.getText() : lblPlayer2.getText();
+            javax.swing.JOptionPane.showMessageDialog(this, winner + " thắng!", "Kết thúc",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+            // Gui ket qua len server
+            if (client != null) {
+                String winnerName = (playerId == myPlayerId) ? myUsername : opponentName;
+                String loserName = (playerId == myPlayerId) ? opponentName : myUsername;
+                client.sendGameResult(winnerName, loserName, "normal");
+            }
+            returnToLobby();
+        });
     }
 
     @Override
     public void onLose() {
-        javax.swing.JOptionPane.showMessageDialog(this, "Bạn đã thua!", "Kết thúc",
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (timerPanel != null)
+                timerPanel.stopTimer();
+            javax.swing.JOptionPane.showMessageDialog(this, "Bạn đã thua!", "Kết thúc",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            returnToLobby();
+        });
     }
 
     @Override
@@ -259,8 +384,13 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
 
     @Override
     public void onDraw() {
-        javax.swing.JOptionPane.showMessageDialog(this, "Hòa!", "Kết thúc",
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (timerPanel != null)
+                timerPanel.stopTimer();
+            javax.swing.JOptionPane.showMessageDialog(this, "Hòa!", "Kết thúc",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            returnToLobby();
+        });
     }
 
     @Override
@@ -268,12 +398,37 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         resetBoard();
     }
 
-    // GUI_Timer.TimerListener
+    @Override
+    public void onTurnChanged(int playerId) {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (timerPanel != null) {
+                timerPanel.resetTurn(playerId);
+            }
+        });
+    }
+
+    // TimerUI.TimerListener
     @Override
     public void onTimeOut(int playerId) {
-        String loser = (playerId == PLAYER_X) ? lblPlayer1.getText() : lblPlayer2.getText();
-        javax.swing.JOptionPane.showMessageDialog(this, loser + " hết thời gian!", "Hết giờ",
-                javax.swing.JOptionPane.WARNING_MESSAGE);
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (gameManager != null && gameManager.isGameOver())
+                return;
+            if (gameManager != null)
+                gameManager.forceGameOver();
+
+            String loser = (playerId == PLAYER_X) ? lblPlayer1.getText() : lblPlayer2.getText();
+            javax.swing.JOptionPane.showMessageDialog(this, loser + " hết thời gian!", "Hết giờ",
+                    javax.swing.JOptionPane.WARNING_MESSAGE);
+
+            // Gui ket qua len server (nguoi het gio = thua)
+            if (client != null) {
+                boolean iMeTimedOut = (playerId == myPlayerId);
+                String winnerName = iMeTimedOut ? opponentName : myUsername;
+                String loserName = iMeTimedOut ? myUsername : opponentName;
+                client.sendGameResult(winnerName, loserName, "timeout");
+            }
+            returnToLobby();
+        });
     }
 
     // Setter
@@ -285,12 +440,26 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     public void setPlayerNames(String name1, String name2) {
         lblPlayer1.setText(name1);
         lblPlayer2.setText(name2);
+        if (timerPanel != null) {
+            timerPanel.setPlayerNames(name1, name2);
+        }
     }
 
-    public void setLobbyCallback(Runnable cb) { this.lobbyCallback = cb; }
-    public void setMyPlayerId(int id) { this.myPlayerId = id; }
-    public javax.swing.JButton[][] getBoardButtons() { return boardButtons; }
-    public int getBoardSize() { return BOARD_SIZE; }
+    public void setLobbyCallback(Runnable cb) {
+        this.lobbyCallback = cb;
+    }
+
+    public void setMyPlayerId(int id) {
+        this.myPlayerId = id;
+    }
+
+    public javax.swing.JButton[][] getBoardButtons() {
+        return boardButtons;
+    }
+
+    public int getBoardSize() {
+        return BOARD_SIZE;
+    }
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(() -> {
@@ -308,8 +477,6 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     private javax.swing.JPanel headerPanel;
     private javax.swing.JLabel lblPlayer1;
     private javax.swing.JLabel lblPlayer2;
-    private javax.swing.JLabel lblTimer1;
-    private javax.swing.JLabel lblTimer2;
     private javax.swing.JLabel lblVs;
     // End of variables declaration//GEN-END:variables
 }

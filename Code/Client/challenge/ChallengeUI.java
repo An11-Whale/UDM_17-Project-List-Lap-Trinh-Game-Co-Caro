@@ -1,6 +1,7 @@
 package Code.Client.challenge;
 
 import Code.Client.gui.BoardUI;
+import Code.Client.Network.ClientSocket;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -11,25 +12,136 @@ public class ChallengeUI extends javax.swing.JFrame {
     private String myUsername;
     private Runnable backCallback;
     private List<PlayerInfo> onlinePlayers;
+    private ClientSocket client;
+    private JDialog waitingDialog;
 
-    public ChallengeUI(String myUsername) {
+    public ChallengeUI(String myUsername, ClientSocket client) {
         this.myUsername = myUsername;
-        loadPlayers();
+        this.client = client;
+        onlinePlayers = new ArrayList<>();
+
         initComponents();
         setupDarkTheme();
-        refreshList();
+        setupClientListener();
+
+        if (client != null) {
+            client.getPlayers();
+        } else {
+            // Fallback for UI testing
+            loadFakePlayers();
+            refreshList();
+        }
     }
 
-    private void loadPlayers() {
-        onlinePlayers = new ArrayList<>();
+    private void setupClientListener() {
+        if (client != null) {
+            client.setListener(new ClientSocket.ClientListener() {
+                @Override
+                public void onConnected() {
+                }
+
+                @Override
+                public void onLogin(boolean success, String message) {
+                }
+
+                @Override
+                public void onGameStart(int myId, String opponentName) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeWaitingDialog();
+                        dispose();
+                        BoardUI board = new BoardUI(myUsername, client, myId, opponentName);
+                        board.setLobbyCallback(backCallback);
+                        board.setVisible(true);
+                    });
+                }
+
+                @Override
+                public void onMove(int row, int col, int player) {
+                }
+
+                @Override
+                public void onMessage(String msg) {
+                    if (msg.startsWith("CHALLENGE_ERROR")) {
+                        javax.swing.SwingUtilities.invokeLater(() -> {
+                            closeWaitingDialog();
+                            JOptionPane.showMessageDialog(ChallengeUI.this,
+                                    "Lỗi thách đấu: " + msg.substring(15), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        });
+                    }
+                }
+
+                @Override
+                public void onDisconnected() {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeWaitingDialog();
+                        JOptionPane.showMessageDialog(ChallengeUI.this,
+                                "Mất kết nối với Server!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        dispose();
+                        Code.Client.gui.LoginUI login = new Code.Client.gui.LoginUI();
+                        login.setVisible(true);
+                    });
+                }
+
+                @Override
+                public void onPlayersList(String[] players) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        onlinePlayers.clear();
+                        for (String p : players) {
+                            if (!p.isEmpty()) {
+                                // Default fake stats for now, server only sends usernames
+                                onlinePlayers.add(new PlayerInfo(p, "Online", 0, 0, 1000));
+                            }
+                        }
+                        refreshList();
+                    });
+                }
+
+                @Override
+                public void onChallengeFrom(String fromUser) {
+                    // Tranh chap popup: Nếu dang đợi ng khac ma bi thach dau thi sao?
+                    // Tam thoi bo qua or hien thi chong len. Tot nhat la handle trong LobbyUI
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        int choice = JOptionPane.showConfirmDialog(ChallengeUI.this,
+                                fromUser + " muốn thách đấu với bạn. Chấp nhận?",
+                                "Lời mời thách đấu",
+                                JOptionPane.YES_NO_OPTION);
+                        if (choice == JOptionPane.YES_OPTION) {
+                            client.acceptChallenge(fromUser);
+                        } else {
+                            client.declineChallenge(fromUser);
+                        }
+                    });
+                }
+
+                @Override
+                public void onChallengeAccepted() {
+                    // Wait for START message to transition, handleGameStart will trigger
+                }
+
+                @Override
+                public void onChallengeDeclined(String byUser) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeWaitingDialog();
+                        JOptionPane.showMessageDialog(ChallengeUI.this,
+                                byUser + " đã từ chối lời thách đấu.", "Từ chối", JOptionPane.INFORMATION_MESSAGE);
+                    });
+                }
+
+                @Override
+                public void onHistoryData(String data) {
+                }
+
+                @Override
+                public void onOpponentSurrendered() {
+                }
+            });
+        }
+    }
+
+    private void loadFakePlayers() {
         onlinePlayers.add(new PlayerInfo("Paper Man", "Online", 15, 8, 1850));
         onlinePlayers.add(new PlayerInfo("Dark Knight", "Online", 22, 12, 2100));
         onlinePlayers.add(new PlayerInfo("StarGamer", "Online", 10, 5, 1600));
-        onlinePlayers.add(new PlayerInfo("ProX99", "Đang chơi", 30, 20, 2350));
-        onlinePlayers.add(new PlayerInfo("MinhHoang", "Online", 8, 3, 1450));
-        onlinePlayers.add(new PlayerInfo("CatoGirl", "Online", 18, 9, 1780));
-        onlinePlayers.add(new PlayerInfo("ThuanVN", "Đang chơi", 25, 15, 2050));
-        onlinePlayers.add(new PlayerInfo("AnhKhoa", "Online", 12, 6, 1700));
     }
 
     private void setupDarkTheme() {
@@ -95,14 +207,19 @@ public class ChallengeUI extends javax.swing.JFrame {
             btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
             btn.setPreferredSize(new Dimension(90, 32));
             btn.addActionListener(e -> {
-                int r = JOptionPane.showConfirmDialog(this, "Thách đấu " + player.name + "?",
-                        "Xác nhận", JOptionPane.YES_NO_OPTION);
-                if (r == JOptionPane.YES_OPTION) {
-                    dispose();
-                    BoardUI board = new BoardUI();
-                    board.setPlayerNames(myUsername, player.name);
-                    board.setLobbyCallback(backCallback);
-                    board.setVisible(true);
+                if (client != null) {
+                    client.challenge(player.name);
+                    showWaitingDialog(player.name);
+                } else {
+                    int r = JOptionPane.showConfirmDialog(this, "Thách đấu " + player.name + "?",
+                            "Xác nhận", JOptionPane.YES_NO_OPTION);
+                    if (r == JOptionPane.YES_OPTION) {
+                        dispose();
+                        BoardUI board = new BoardUI();
+                        board.setPlayerNames(myUsername, player.name);
+                        board.setLobbyCallback(backCallback);
+                        board.setVisible(true);
+                    }
                 }
             });
             card.add(btn, BorderLayout.EAST);
@@ -113,6 +230,34 @@ public class ChallengeUI extends javax.swing.JFrame {
             card.add(lblBusy, BorderLayout.EAST);
         }
         return card;
+    }
+
+    private void showWaitingDialog(String targetUser) {
+        waitingDialog = new JDialog(this, "Đang chờ", true);
+        waitingDialog.setLayout(new BorderLayout());
+        waitingDialog.setSize(300, 150);
+        waitingDialog.setLocationRelativeTo(this);
+
+        JLabel lblWait = new JLabel("Đang đợi " + targetUser + " chấp nhận...", SwingConstants.CENTER);
+        waitingDialog.add(lblWait, BorderLayout.CENTER);
+
+        JButton btnCancel = new JButton("Hủy");
+        btnCancel.addActionListener(e -> {
+            closeWaitingDialog();
+            // TODO: Optional: Send cancel challenge to server
+        });
+        JPanel bottom = new JPanel();
+        bottom.add(btnCancel);
+        waitingDialog.add(bottom, BorderLayout.SOUTH);
+
+        waitingDialog.setVisible(true);
+    }
+
+    private void closeWaitingDialog() {
+        if (waitingDialog != null) {
+            waitingDialog.dispose();
+            waitingDialog = null;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -197,8 +342,12 @@ public class ChallengeUI extends javax.swing.JFrame {
     }// GEN-LAST:event_btnBackActionPerformed
 
     private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnRefreshActionPerformed
-        loadPlayers();
-        refreshList();
+        if (client != null) {
+            client.getPlayers();
+        } else {
+            loadFakePlayers();
+            refreshList();
+        }
     }// GEN-LAST:event_btnRefreshActionPerformed
 
     public void setBackCallback(Runnable cb) {
@@ -225,7 +374,7 @@ public class ChallengeUI extends javax.swing.JFrame {
 
     // Test
     public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(() -> new ChallengeUI("TestUser").setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new ChallengeUI("TestUser", null).setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -239,4 +388,3 @@ public class ChallengeUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane scrollPane;
     // End of variables declaration//GEN-END:variables
 }
-

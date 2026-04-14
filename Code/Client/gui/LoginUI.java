@@ -159,10 +159,16 @@ public class LoginUI extends javax.swing.JFrame {
                     }
                 });
             }
-            @Override public void onGameStart(int myId) {}
+            @Override public void onGameStart(int myId, String opponentName) {}
             @Override public void onMove(int row, int col, int player) {}
             @Override public void onMessage(String msg) {}
             @Override public void onDisconnected() {}
+            @Override public void onPlayersList(String[] players) {}
+            @Override public void onChallengeFrom(String fromUser) {}
+            @Override public void onChallengeAccepted() {}
+            @Override public void onChallengeDeclined(String byUser) {}
+            @Override public void onHistoryData(String data) {}
+            @Override public void onOpponentSurrendered() {}
         });
         lblError.setForeground(new java.awt.Color(220, 225, 240));
         lblError.setText("Đang đăng nhập...");
@@ -188,7 +194,7 @@ public class LoginUI extends javax.swing.JFrame {
         client.setListener(new ClientSocket.ClientListener() {
             @Override public void onConnected() {}
             @Override public void onLogin(boolean success, String message) {}
-            @Override public void onGameStart(int myId) {}
+            @Override public void onGameStart(int myId, String opponentName) {}
             @Override public void onMove(int row, int col, int player) {}
             @Override public void onMessage(String msg) {
                 javax.swing.SwingUtilities.invokeLater(() -> {
@@ -204,6 +210,12 @@ public class LoginUI extends javax.swing.JFrame {
                 });
             }
             @Override public void onDisconnected() {}
+            @Override public void onPlayersList(String[] players) {}
+            @Override public void onChallengeFrom(String fromUser) {}
+            @Override public void onChallengeAccepted() {}
+            @Override public void onChallengeDeclined(String byUser) {}
+            @Override public void onHistoryData(String data) {}
+            @Override public void onOpponentSurrendered() {}
         });
         lblError.setForeground(new java.awt.Color(220, 225, 240));
         lblError.setText("Đang xử lý...");

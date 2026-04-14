@@ -1,5 +1,6 @@
 package Code.Client.history;
 
+import Code.Client.Network.ClientSocket;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -10,25 +11,75 @@ public class HistoryUI extends javax.swing.JFrame {
     private String myUsername;
     private Runnable backCallback;
     private List<MatchRecord> matchHistory;
+    private ClientSocket client;
 
-    public HistoryUI(String myUsername) {
+    public HistoryUI(String myUsername, ClientSocket client) {
         this.myUsername = myUsername;
-        loadHistory();
+        this.client = client;
+        this.matchHistory = new ArrayList<>();
+        
         initComponents();
         setupDarkTheme();
-        refreshHistory();
+        setupClientListener();
+        
+        if (client != null) {
+            client.getHistory();
+        } else {
+            loadFakeHistory();
+            refreshHistory();
+        }
     }
 
-    private void loadHistory() {
-        matchHistory = new ArrayList<>();
-        matchHistory.add(new MatchRecord("Paper Man", true, "13/04/2026 11:30", "3:45", 42));
-        matchHistory.add(new MatchRecord("Dark Knight", false, "13/04/2026 10:15", "5:00", 68));
-        matchHistory.add(new MatchRecord("StarGamer", true, "12/04/2026 20:30", "2:18", 31));
-        matchHistory.add(new MatchRecord("ProX99", false, "12/04/2026 18:45", "4:52", 55));
-        matchHistory.add(new MatchRecord("MinhHoang", true, "11/04/2026 15:20", "1:55", 28));
-        matchHistory.add(new MatchRecord("CatoGirl", true, "11/04/2026 14:00", "3:10", 38));
-        matchHistory.add(new MatchRecord("AnhKhoa", false, "10/04/2026 21:30", "4:30", 50));
-        matchHistory.add(new MatchRecord("ThuanVN", true, "10/04/2026 19:00", "2:45", 35));
+    private void setupClientListener() {
+        if (client != null) {
+            client.setListener(new ClientSocket.ClientListener() {
+                @Override public void onConnected() {}
+                @Override public void onLogin(boolean success, String message) {}
+                @Override public void onGameStart(int myId, String opponentName) {}
+                @Override public void onMove(int row, int col, int player) {}
+                @Override public void onMessage(String msg) {}
+                @Override public void onDisconnected() {
+                     javax.swing.SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(HistoryUI.this,
+                                "Mất kết nối với Server!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        dispose();
+                        Code.Client.gui.LoginUI login = new Code.Client.gui.LoginUI();
+                        login.setVisible(true);
+                    });
+                }
+                @Override public void onPlayersList(String[] players) {}
+                @Override public void onChallengeFrom(String fromUser) {}
+                @Override public void onChallengeAccepted() {}
+                @Override public void onChallengeDeclined(String byUser) {}
+                @Override public void onOpponentSurrendered() {}
+                
+                @Override public void onHistoryData(String data) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        matchHistory.clear();
+                        if (!"EMPTY".equals(data)) {
+                            // data format: opponent|win/loss|date;opponent|win/loss|date
+                            String[] records = data.split(";");
+                            for (String r : records) {
+                                String[] parts = r.split("\\|");
+                                if (parts.length >= 3) {
+                                    String opp = parts[0];
+                                    boolean iWon = "win".equals(parts[1]);
+                                    String date = parts[2];
+                                    String reason = parts.length > 3 ? parts[3] : "normal";
+                                    matchHistory.add(new MatchRecord(opp, iWon, date, reason));
+                                }
+                            }
+                        }
+                        refreshHistory();
+                    });
+                }
+            });
+        }
+    }
+
+    private void loadFakeHistory() {
+        matchHistory.add(new MatchRecord("Paper Man", true, "13/04/2026 11:30", "normal"));
+        matchHistory.add(new MatchRecord("Dark Knight", false, "13/04/2026 10:15", "timeout"));
     }
 
     private void setupDarkTheme() {
@@ -56,7 +107,10 @@ public class HistoryUI extends javax.swing.JFrame {
     private void refreshHistory() {
         historyListPanel.removeAll();
         int wins = 0, losses = 0;
-        for (MatchRecord m : matchHistory) {
+        
+        // dao nguoc array de tran dung gan nhat hien thi len dau
+        for (int i = matchHistory.size() - 1; i >= 0; i--) {
+            MatchRecord m = matchHistory.get(i);
             if (m.isWin)
                 wins++;
             else
@@ -64,6 +118,7 @@ public class HistoryUI extends javax.swing.JFrame {
             historyListPanel.add(createMatchCard(m));
             historyListPanel.add(Box.createVerticalStrut(6));
         }
+        
         int total = matchHistory.size();
         double rate = total > 0 ? (wins * 100.0 / total) : 0;
         lblTotal.setText(String.valueOf(total));
@@ -91,7 +146,9 @@ public class HistoryUI extends javax.swing.JFrame {
         vs.setFont(new Font("Segoe UI", Font.BOLD, 14));
         vs.setForeground(new Color(220, 225, 240));
         info.add(vs);
-        JLabel details = new JLabel(match.date + " | " + match.duration + " | " + match.totalMoves + " nước");
+        
+        String reasonText = "normal".equals(match.reason) ? "" : " (" + match.reason + ")";
+        JLabel details = new JLabel(match.date + reasonText);
         details.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         details.setForeground(new Color(120, 130, 160));
         info.add(details);
@@ -149,7 +206,7 @@ public class HistoryUI extends javax.swing.JFrame {
 
         lblTitle.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblTitle.setText("Lịch sử trản đấu");
+        lblTitle.setText("Lịch sử trận đấu");
         headerPanel.add(lblTitle);
         lblTitle.setBounds(120, 12, 280, 30);
 
@@ -224,28 +281,21 @@ public class HistoryUI extends javax.swing.JFrame {
         this.backCallback = cb;
     }
 
-    public void updateHistory(List<MatchRecord> h) {
-        this.matchHistory = h;
-        refreshHistory();
-    }
-
     public static class MatchRecord {
-        public String opponent, date, duration;
+        public String opponent, date, reason;
         public boolean isWin;
-        public int totalMoves;
 
-        public MatchRecord(String o, boolean w, String d, String dur, int m) {
+        public MatchRecord(String o, boolean w, String d, String r) {
             opponent = o;
             isWin = w;
             date = d;
-            duration = dur;
-            totalMoves = m;
+            reason = r;
         }
     }
 
     // Test
     public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(() -> new HistoryUI("TestUser").setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new HistoryUI("TestUser", null).setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

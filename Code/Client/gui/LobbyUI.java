@@ -2,7 +2,6 @@ package Code.Client.gui;
 
 import Code.Client.challenge.ChallengeUI;
 import Code.Client.history.HistoryUI;
-import Code.Client.gui.LoginUI;
 import Code.Client.Network.ClientSocket;
 
 public class LobbyUI extends javax.swing.JFrame {
@@ -17,20 +16,58 @@ public class LobbyUI extends javax.swing.JFrame {
         setupDarkTheme();
         lblUsername.setText(username);
         
+        setupClientListener();
+    }
+
+    private void setupClientListener() {
         if (this.client != null) {
             this.client.setListener(new ClientSocket.ClientListener() {
                 @Override public void onConnected() {}
                 @Override public void onLogin(boolean success, String message) {}
-                @Override public void onGameStart(int myId) {
+                @Override public void onGameStart(int myId, String opponentName) {
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         dispose();
-                        BoardUI board = new BoardUI(username, LobbyUI.this.client, myId);
+                        BoardUI board = new BoardUI(username, LobbyUI.this.client, myId, opponentName);
+                        board.setLobbyCallback(() -> new LobbyUI(username, LobbyUI.this.client).setVisible(true));
                         board.setVisible(true);
                     });
                 }
                 @Override public void onMove(int row, int col, int player) {}
-                @Override public void onMessage(String msg) {}
-                @Override public void onDisconnected() {}
+                @Override public void onMessage(String msg) {
+                    if (msg.startsWith("CHALLENGE_ERROR")) {
+                        javax.swing.SwingUtilities.invokeLater(() -> {
+                            javax.swing.JOptionPane.showMessageDialog(LobbyUI.this,
+                                "Lỗi thách đấu: " + msg.substring(15), "Lỗi",
+                                javax.swing.JOptionPane.ERROR_MESSAGE);
+                        });
+                    }
+                }
+                @Override public void onDisconnected() {
+                     javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JOptionPane.showMessageDialog(LobbyUI.this,
+                                "Mất kết nối với Server!", "Lỗi", javax.swing.JOptionPane.ERROR_MESSAGE);
+                        dispose();
+                        new LoginUI().setVisible(true);
+                    });
+                }
+                @Override public void onPlayersList(String[] players) {}
+                @Override public void onChallengeFrom(String fromUser) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        int choice = javax.swing.JOptionPane.showConfirmDialog(LobbyUI.this,
+                            fromUser + " muốn thách đấu với bạn. Chấp nhận?",
+                            "Lời mời thách đấu",
+                            javax.swing.JOptionPane.YES_NO_OPTION);
+                        if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                            client.acceptChallenge(fromUser);
+                        } else {
+                            client.declineChallenge(fromUser);
+                        }
+                    });
+                }
+                @Override public void onChallengeAccepted() {}
+                @Override public void onChallengeDeclined(String byUser) {}
+                @Override public void onHistoryData(String data) {}
+                @Override public void onOpponentSurrendered() {}
             });
         }
     }
@@ -110,7 +147,7 @@ public class LobbyUI extends javax.swing.JFrame {
 
         lblDesc.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblDesc.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblDesc.setText("Chọn chức năng bên dưỚi");
+        lblDesc.setText("Chọn chức năng bên dưới");
         contentPanel.add(lblDesc);
         lblDesc.setBounds(20, 65, 480, 25);
 
@@ -126,7 +163,7 @@ public class LobbyUI extends javax.swing.JFrame {
         btnChallenge.setBounds(60, 130, 400, 80);
 
         btnHistory.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        btnHistory.setText("Lịch sử trản đấu");
+        btnHistory.setText("Lịch sử trận đấu");
         btnHistory.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnHistory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -144,6 +181,7 @@ public class LobbyUI extends javax.swing.JFrame {
 
     private void btnLogoutActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnLogoutActionPerformed
         if (client != null) {
+            client.setListener(null);
             client.disconnect();
         }
         dispose();
@@ -152,15 +190,21 @@ public class LobbyUI extends javax.swing.JFrame {
 
     private void btnChallengeActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnChallengeActionPerformed
         dispose();
-        ChallengeUI challenge = new ChallengeUI(username);
-        challenge.setBackCallback(() -> new LobbyUI(username, client).setVisible(true));
+        ChallengeUI challenge = new ChallengeUI(username, client);
+        challenge.setBackCallback(() -> {
+            LobbyUI lobby = new LobbyUI(username, client);
+            lobby.setVisible(true);
+        });
         challenge.setVisible(true);
     }// GEN-LAST:event_btnChallengeActionPerformed
 
     private void btnHistoryActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnHistoryActionPerformed
         dispose();
-        HistoryUI history = new HistoryUI(username);
-        history.setBackCallback(() -> new LobbyUI(username, client).setVisible(true));
+        HistoryUI history = new HistoryUI(username, client);
+        history.setBackCallback(() -> {
+            LobbyUI lobby = new LobbyUI(username, client);
+            lobby.setVisible(true);
+        });
         history.setVisible(true);
     }// GEN-LAST:event_btnHistoryActionPerformed
 

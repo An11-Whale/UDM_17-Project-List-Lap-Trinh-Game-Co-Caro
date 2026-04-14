@@ -14,14 +14,32 @@ public class SocketHandler {
     private OutputStream os;
     private Thread listenerThread;
 
+    private boolean isClosed = false;
+
     private SocketListener listener;
 
     public interface SocketListener {
         void onConnected();
+
         void onLogin(boolean success, String message);
+
         void onMessage(String msg);
+
         void onDisconnected();
-        void onGameStart(int myId);
+
+        void onGameStart(int myId, String opponentName);
+
+        void onPlayersList(String[] players);
+
+        void onChallengeFrom(String fromUser);
+
+        void onChallengeAccepted();
+
+        void onChallengeDeclined(String byUser);
+
+        void onHistoryData(String data);
+
+        void onOpponentSurrendered();
     }
 
     private GameManager gameManager;
@@ -45,7 +63,8 @@ public class SocketHandler {
             listenerThread = new Thread(this::listen);
             listenerThread.start();
 
-            if (listener != null) listener.onConnected();
+            if (listener != null)
+                listener.onConnected();
 
             return true;
         } catch (Exception e) {
@@ -54,11 +73,13 @@ public class SocketHandler {
     }
 
     private void handleMessage(String line) {
-        if (line.isEmpty()) return;
+        if (line.isEmpty())
+            return;
 
-        String[] parts = line.split(" ");
+        String[] parts = line.split(" ", 2);
+        String command = parts[0];
 
-        switch (parts[0]) {
+        switch (command) {
             case "LOGIN_SUCCESS":
                 if (listener != null) {
                     listener.onLogin(true, "OK");
@@ -72,9 +93,10 @@ public class SocketHandler {
                 break;
 
             case "MOVE":
-                int row = Integer.parseInt(parts[1]);
-                int col = Integer.parseInt(parts[2]);
-                int player = Integer.parseInt(parts[3]);
+                String[] moveParts = line.split(" ");
+                int row = Integer.parseInt(moveParts[1]);
+                int col = Integer.parseInt(moveParts[2]);
+                int player = Integer.parseInt(moveParts[3]);
 
                 if (gameManager != null) {
                     gameManager.onServerMove(row, col, player);
@@ -82,10 +104,60 @@ public class SocketHandler {
                 break;
 
             case "START":
-                int myId = Integer.parseInt(parts[1]);
+                String[] startParts = line.split(" ");
+                int myId = Integer.parseInt(startParts[1]);
+                String opponentName = startParts.length > 2 ? startParts[2] : "Opponent";
 
                 if (listener != null) {
-                    listener.onGameStart(myId);
+                    listener.onGameStart(myId, opponentName);
+                }
+                break;
+
+            case "PLAYERS_LIST":
+                if (listener != null) {
+                    if (parts.length > 1 && !parts[1].equals("EMPTY")) {
+                        String[] players = parts[1].split(",");
+                        listener.onPlayersList(players);
+                    } else {
+                        listener.onPlayersList(new String[0]);
+                    }
+                }
+                break;
+
+            case "CHALLENGE_FROM":
+                if (listener != null && parts.length > 1) {
+                    listener.onChallengeFrom(parts[1].trim());
+                }
+                break;
+
+            case "CHALLENGE_ACCEPTED":
+                if (listener != null) {
+                    listener.onChallengeAccepted();
+                }
+                break;
+
+            case "CHALLENGE_DECLINED":
+                if (listener != null) {
+                    String byUser = parts.length > 1 ? parts[1].trim() : "";
+                    listener.onChallengeDeclined(byUser);
+                }
+                break;
+
+            case "CHALLENGE_ERROR":
+                if (listener != null) {
+                    listener.onMessage("CHALLENGE_ERROR " + (parts.length > 1 ? parts[1] : ""));
+                }
+                break;
+
+            case "HISTORY_DATA":
+                if (listener != null) {
+                    listener.onHistoryData(parts.length > 1 ? parts[1] : "EMPTY");
+                }
+                break;
+
+            case "OPPONENT_SURRENDERED":
+                if (listener != null) {
+                    listener.onOpponentSurrendered();
                 }
                 break;
 
@@ -103,7 +175,8 @@ public class SocketHandler {
         try {
             while (true) {
                 int read = is.read(buffer);
-                if (read == -1) break;
+                if (read == -1)
+                    break;
 
                 sb.append(new String(buffer, 0, read));
 
@@ -116,8 +189,8 @@ public class SocketHandler {
                 }
             }
         } catch (Exception e) {
-    }
-    close();
+        }
+        close();
     }
 
     public void login(String user, String pass) {
@@ -137,15 +210,47 @@ public class SocketHandler {
     }
 
     public void close() {
+        if (isClosed)
+            return;
+        isClosed = true;
+
         try {
-            if (socket != null) socket.close();
+            if (socket != null)
+                socket.close();
         } catch (Exception e) {
         }
 
-        if (listener != null) listener.onDisconnected();
+        if (listener != null)
+            listener.onDisconnected();
     }
 
     public void sendMove(int row, int col) {
         send("MOVE " + row + " " + col);
+    }
+
+    // NEW API METHODS
+
+    public void getPlayers() {
+        send("GET_PLAYERS");
+    }
+
+    public void challenge(String targetUser) {
+        send("CHALLENGE " + targetUser);
+    }
+
+    public void acceptChallenge(String fromUser) {
+        send("ACCEPT_CHALLENGE " + fromUser);
+    }
+
+    public void declineChallenge(String fromUser) {
+        send("DECLINE_CHALLENGE " + fromUser);
+    }
+
+    public void sendGameResult(String winner, String loser, String reason) {
+        send("GAME_RESULT " + winner + " " + loser + " " + reason);
+    }
+
+    public void getHistory() {
+        send("GET_HISTORY");
     }
 }
