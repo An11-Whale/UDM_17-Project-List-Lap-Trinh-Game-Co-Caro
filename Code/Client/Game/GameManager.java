@@ -18,7 +18,8 @@ public class GameManager {
         void onLose();
         void onMove(int row, int col, int player);
         void onDraw();
-        void onReset(); 
+        void onReset();
+        void onTurnChanged(int playerId);
     }
     private GameListener listener;
 
@@ -35,21 +36,35 @@ public class GameManager {
         this.isMyTurn = (myPlayerId == currentPlayer);
         this.isGameOver = false;
     }
+    
     //player click
     public boolean makeMove(int row, int col) {
         if (isGameOver) return false;
         if (!isMyTurn) return false;
 
+        // UPDATE: Khóa turn ngay lập tức để tránh người chơi spam click gửi 2 nước liên tiếp
+        isMyTurn = false;
+
         client.sendMove(row, col);
 
         return true;
     }
-    //nhận move từ server(đã xóa onOpponentMove code cũ)
+    
+    //nhận move từ server
     public void onServerMove(int row, int col, int player) {
         if (isGameOver) return;
 
+        // UPDATE: Chặn nước cờ nếu server trả về player không trùng với lượt hiện tại (lọc lỗi đồng bộ lặp nước cờ)
+        if (player != currentPlayer) {
+            System.err.println("Cảnh báo: Dữ liệu nhận sai lượt! Lượt hiện tại là " + currentPlayer + " nhưng nhận được nước đi của " + player);
+            return;
+        }
+
         boolean success = board.place(row, col, player);
-        if (!success) return;
+        if (!success) {
+            // Nước đi không hợp lệ (ô đã đánh)
+            return;
+        }
 
         if (listener != null) {
             listener.onMove(row, col, player);
@@ -84,7 +99,12 @@ public class GameManager {
     public void switchTurn() {
         currentPlayer = (currentPlayer == 1) ? 2 : 1;
         isMyTurn = (currentPlayer == myPlayerId);
+
+        if (listener != null) {
+            listener.onTurnChanged(currentPlayer);
+        }
     }
+    
     //check win
     public boolean checkWin(int row, int col) {
         int player = board.getCell(row, col);
@@ -132,6 +152,12 @@ public class GameManager {
         return true;
     }
 
+    // Đánh dấu game over (cho timeout / surrender)
+    public void forceGameOver() {
+        isGameOver = true;
+        isMyTurn = false;
+    }
+
     //reset game cho UI
     public void resetGame() {
         board.reset();
@@ -164,5 +190,9 @@ public class GameManager {
 
     public int getMyPlayerId() {
         return myPlayerId;
+    }
+
+    public int getCurrentPlayer() {
+        return currentPlayer;
     }
 }

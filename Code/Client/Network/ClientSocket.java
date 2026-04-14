@@ -6,17 +6,107 @@ public class ClientSocket {
 
     public interface ClientListener {
         void onConnected();
+
         void onLogin(boolean success, String message);
-        void onGameStart(int myId);
+
+        void onGameStart(int myId, String opponentName);
+
         void onMove(int row, int col, int player);
+
         void onMessage(String msg);
+
         void onDisconnected();
+
+        void onPlayersList(String[] players);
+
+        void onChallengeFrom(String fromUser);
+
+        void onChallengeAccepted();
+
+        void onChallengeDeclined(String byUser);
+
+        void onHistoryData(String data);
+
+        void onOpponentSurrendered();
     }
 
     private ClientListener listener;
 
+    public SocketHandler getSocketHandler() {
+        return socket;
+    }
+
     public void setListener(ClientListener listener) {
         this.listener = listener;
+
+        // Cap nhat listener cho SocketHandler
+        socket.setListener(new SocketHandler.SocketListener() {
+            @Override
+            public void onConnected() {
+                if (listener != null)
+                    listener.onConnected();
+            }
+
+            @Override
+            public void onLogin(boolean success, String message) {
+                if (listener != null)
+                    listener.onLogin(success, message);
+            }
+
+            @Override
+            public void onMessage(String msg) {
+                handleServerMessage(msg);
+            }
+
+            @Override
+            public void onDisconnected() {
+                if (listener != null)
+                    listener.onDisconnected();
+            }
+
+            @Override
+            public void onGameStart(int myId, String opponentName) {
+                if (listener != null) {
+                    listener.onGameStart(myId, opponentName);
+                }
+            }
+
+            @Override
+            public void onPlayersList(String[] players) {
+                if (listener != null)
+                    listener.onPlayersList(players);
+            }
+
+            @Override
+            public void onChallengeFrom(String fromUser) {
+                if (listener != null)
+                    listener.onChallengeFrom(fromUser);
+            }
+
+            @Override
+            public void onChallengeAccepted() {
+                if (listener != null)
+                    listener.onChallengeAccepted();
+            }
+
+            @Override
+            public void onChallengeDeclined(String byUser) {
+                if (listener != null)
+                    listener.onChallengeDeclined(byUser);
+            }
+
+            @Override
+            public void onHistoryData(String data) {
+                if (listener != null)
+                    listener.onHistoryData(data);
+            }
+
+            @Override
+            public void onOpponentSurrendered() {
+                if (listener != null)
+                    listener.onOpponentSurrendered();
+            }
+        });
     }
 
     public ClientSocket() {
@@ -25,30 +115,73 @@ public class ClientSocket {
         socket.setListener(new SocketHandler.SocketListener() {
             @Override
             public void onConnected() {
-                if (listener != null) listener.onConnected();
+                if (listener != null)
+                    listener.onConnected();
             }
+
             @Override
             public void onLogin(boolean success, String message) {
-                if (listener != null) listener.onLogin(success, message);
+                if (listener != null)
+                    listener.onLogin(success, message);
             }
+
             @Override
             public void onMessage(String msg) {
                 handleServerMessage(msg);
             }
+
             @Override
             public void onDisconnected() {
-                if (listener != null) listener.onDisconnected();
+                if (listener != null)
+                    listener.onDisconnected();
             }
+
             @Override
-            public void onGameStart(int myId) {
+            public void onGameStart(int myId, String opponentName) {
                 if (listener != null) {
-                    listener.onGameStart(myId);
+                    listener.onGameStart(myId, opponentName);
                 }
+            }
+
+            @Override
+            public void onPlayersList(String[] players) {
+                if (listener != null)
+                    listener.onPlayersList(players);
+            }
+
+            @Override
+            public void onChallengeFrom(String fromUser) {
+                if (listener != null)
+                    listener.onChallengeFrom(fromUser);
+            }
+
+            @Override
+            public void onChallengeAccepted() {
+                if (listener != null)
+                    listener.onChallengeAccepted();
+            }
+
+            @Override
+            public void onChallengeDeclined(String byUser) {
+                if (listener != null)
+                    listener.onChallengeDeclined(byUser);
+            }
+
+            @Override
+            public void onHistoryData(String data) {
+                if (listener != null)
+                    listener.onHistoryData(data);
+            }
+
+            @Override
+            public void onOpponentSurrendered() {
+                if (listener != null)
+                    listener.onOpponentSurrendered();
             }
         });
     }
 
-    //NETWORK API
+    // NETWORK API
 
     public boolean connect(String host, int port) {
         return socket.connect(host, port);
@@ -70,10 +203,37 @@ public class ClientSocket {
         socket.close();
     }
 
-    //PARSE SERVER
+    // NEW API
+
+    public void getPlayers() {
+        socket.getPlayers();
+    }
+
+    public void challenge(String targetUser) {
+        socket.challenge(targetUser);
+    }
+
+    public void acceptChallenge(String fromUser) {
+        socket.acceptChallenge(fromUser);
+    }
+
+    public void declineChallenge(String fromUser) {
+        socket.declineChallenge(fromUser);
+    }
+
+    public void sendGameResult(String winner, String loser, String reason) {
+        socket.sendGameResult(winner, loser, reason);
+    }
+
+    public void getHistory() {
+        socket.getHistory();
+    }
+
+    // PARSE SERVER
 
     private void handleServerMessage(String msg) {
-        if (msg == null || msg.isEmpty()) return;
+        if (msg == null || msg.isEmpty())
+            return;
 
         String[] parts = msg.split(" ");
 
@@ -81,7 +241,9 @@ public class ClientSocket {
 
             case "START":
                 int myId = Integer.parseInt(parts[1]);
-                if (listener != null) listener.onGameStart(myId);
+                String opponentName = parts.length > 2 ? parts[2] : "Opponent";
+                if (listener != null)
+                    listener.onGameStart(myId, opponentName);
                 break;
 
             case "MOVE":
@@ -95,7 +257,8 @@ public class ClientSocket {
                 break;
 
             default:
-                if (listener != null) listener.onMessage(msg);
+                if (listener != null)
+                    listener.onMessage(msg);
         }
     }
 }
