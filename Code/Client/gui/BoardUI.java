@@ -20,6 +20,7 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     private ClientSocket client;
     private String myUsername = "Player";
     private String opponentName = "Opponent";
+    private javax.swing.JLabel lblTurnIndicator;
 
     public BoardUI() {
         initComponents();
@@ -88,6 +89,10 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
                 }
 
                 @Override
+                public void onChallengeCancelled(String byUser) {
+                }
+
+                @Override
                 public void onHistoryData(String data) {
                 }
 
@@ -133,14 +138,23 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         // Chuyen headerPanel sang trong timerPanel phia tren
         getContentPane().remove(headerPanel);
 
-        // Tao wrapper panel chua header + timer
+        // Tao wrapper panel chua header + timer + turn indicator
         javax.swing.JPanel topPanel = new javax.swing.JPanel();
         topPanel.setLayout(new javax.swing.BoxLayout(topPanel, javax.swing.BoxLayout.Y_AXIS));
         topPanel.setBackground(new java.awt.Color(18, 22, 36));
         topPanel.add(headerPanel);
         topPanel.add(timerPanel);
 
+        // Them turn indicator
+        javax.swing.JPanel turnRow = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 0, 4));
+        turnRow.setBackground(new java.awt.Color(18, 22, 36));
+        turnRow.add(lblTurnIndicator);
+        topPanel.add(turnRow);
+
         getContentPane().add(topPanel, java.awt.BorderLayout.NORTH);
+
+        // Khoi tao trang thai ban dau - Player 1 di truoc
+        updateTurnIndicator(PLAYER_X);
 
         pack();
         setLocationRelativeTo(null);
@@ -161,6 +175,50 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         btnSurrender.setBackground(new java.awt.Color(180, 50, 50));
         btnSurrender.setForeground(java.awt.Color.WHITE);
         btnSurrender.setFocusPainted(false);
+
+        // Tạo label chỉ báo lượt chơi
+        lblTurnIndicator = new javax.swing.JLabel("Lượt của bạn");
+        lblTurnIndicator.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        lblTurnIndicator.setForeground(new java.awt.Color(50, 200, 80));
+        lblTurnIndicator.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTurnIndicator.setOpaque(true);
+        lblTurnIndicator.setBackground(new java.awt.Color(30, 60, 40));
+        lblTurnIndicator.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(50, 200, 80), 1),
+                javax.swing.BorderFactory.createEmptyBorder(4, 12, 4, 12)));
+    }
+
+    private void updateTurnIndicator(int playerId) {
+        boolean isMyTurn = (playerId == myPlayerId);
+
+        if (isMyTurn) {
+            lblTurnIndicator.setText("Lượt của bạn");
+            lblTurnIndicator.setForeground(new java.awt.Color(50, 255, 100));
+            lblTurnIndicator.setBackground(new java.awt.Color(30, 60, 40));
+            lblTurnIndicator.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                    javax.swing.BorderFactory.createLineBorder(new java.awt.Color(50, 200, 80), 1),
+                    javax.swing.BorderFactory.createEmptyBorder(4, 12, 4, 12)));
+        } else {
+            lblTurnIndicator.setText("Đợi đối thủ...");
+            lblTurnIndicator.setForeground(new java.awt.Color(255, 200, 50));
+            lblTurnIndicator.setBackground(new java.awt.Color(60, 50, 30));
+            lblTurnIndicator.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                    javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 200, 50), 1),
+                    javax.swing.BorderFactory.createEmptyBorder(4, 12, 4, 12)));
+        }
+
+        // Highlight tên người chơi đang đánh
+        if (playerId == PLAYER_X) {
+            lblPlayer1.setForeground(new java.awt.Color(80, 220, 255));
+            lblPlayer1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+            lblPlayer2.setForeground(new java.awt.Color(120, 60, 60));
+            lblPlayer2.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        } else {
+            lblPlayer2.setForeground(new java.awt.Color(255, 120, 120));
+            lblPlayer2.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+            lblPlayer1.setForeground(new java.awt.Color(50, 100, 120));
+            lblPlayer1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        }
     }
 
     private void createBoard() {
@@ -313,6 +371,19 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         int choice = javax.swing.JOptionPane.showConfirmDialog(this,
                 "Thoát trận đấu?", "Xác nhận", javax.swing.JOptionPane.YES_NO_OPTION);
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
+            if (timerPanel != null)
+                timerPanel.stopTimer();
+            if (gameManager != null)
+                gameManager.forceGameOver();
+
+            // Gui SURRENDER len server
+            if (client != null) {
+                client.getSocketHandler().send("SURRENDER");
+            }
+            String winner = (myPlayerId == PLAYER_X) ? lblPlayer2.getText() : lblPlayer1.getText();
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Bạn đã đầu hàng!\n" + winner + " thắng!",
+                    "Kết thúc", javax.swing.JOptionPane.INFORMATION_MESSAGE);
             returnToLobby();
         }
     }// GEN-LAST:event_btnBackActionPerformed
@@ -351,7 +422,7 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
             if (timerPanel != null)
                 timerPanel.stopTimer();
             String winner = (playerId == PLAYER_X) ? lblPlayer1.getText() : lblPlayer2.getText();
-            javax.swing.JOptionPane.showMessageDialog(this, winner + " thắng!", "Kết thúc",
+            javax.swing.JOptionPane.showMessageDialog(this, "Bạn đã thắng!", "Kết thúc",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
 
             // Gui ket qua len server
@@ -402,6 +473,7 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
             if (timerPanel != null) {
                 timerPanel.resetTurn(playerId);
             }
+            updateTurnIndicator(playerId);
         });
     }
 

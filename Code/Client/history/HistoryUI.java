@@ -51,6 +51,7 @@ public class HistoryUI extends javax.swing.JFrame {
                 @Override public void onChallengeFrom(String fromUser) {}
                 @Override public void onChallengeAccepted() {}
                 @Override public void onChallengeDeclined(String byUser) {}
+                @Override public void onChallengeCancelled(String byUser) {}
                 @Override public void onOpponentSurrendered() {}
                 
                 @Override public void onHistoryData(String data) {
@@ -165,8 +166,7 @@ public class HistoryUI extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         headerPanel = new javax.swing.JPanel();

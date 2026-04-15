@@ -36,6 +36,57 @@ public class TimerUI extends JPanel {
 
     private TimerListener listener;
 
+    // Named inner class thay cho anonymous class (avatar)
+    static class AvatarPanel extends JPanel {
+        private final Color borderColor;
+        private final String symbol;
+
+        AvatarPanel(Color borderColor, String symbol) {
+            this.borderColor = borderColor;
+            this.symbol = symbol;
+            setOpaque(false);
+            setPreferredSize(new Dimension(50, 50));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int size = Math.min(getWidth(), getHeight());
+            int x = (getWidth() - size) / 2, y = (getHeight() - size) / 2;
+            g2.setColor(new Color(45, 50, 70));
+            g2.fillOval(x + 3, y + 3, size - 6, size - 6);
+            g2.setStroke(new BasicStroke(3f));
+            g2.setColor(borderColor);
+            g2.drawOval(x + 2, y + 2, size - 4, size - 4);
+            g2.setFont(new Font("Segoe UI", Font.BOLD, size / 2));
+            FontMetrics fm = g2.getFontMetrics();
+            g2.drawString(symbol, x + (size - fm.stringWidth(symbol)) / 2,
+                    y + (size - fm.getHeight()) / 2 + fm.getAscent());
+            g2.dispose();
+        }
+    }
+
+    // Named inner class thay cho anonymous class (score circle)
+    static class ScoreCircleLabel extends JLabel {
+        private final Color circleColor;
+
+        ScoreCircleLabel(Color color) {
+            this.circleColor = color;
+            setPreferredSize(new Dimension(18, 18));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(circleColor);
+            g2.fillOval(2, 2, getWidth() - 4, getHeight() - 4);
+            g2.dispose();
+        }
+    }
+
     public TimerUI() {
         this(DEFAULT_TURN_TIME);
     }
@@ -65,8 +116,8 @@ public class TimerUI extends JPanel {
         // Score (giữa)
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         centerPanel.setOpaque(false);
-        centerPanel.add(createScoreCircle(COLOR_GOLD));
-        centerPanel.add(createScoreCircle(new Color(100, 110, 130)));
+        centerPanel.add(new ScoreCircleLabel(COLOR_GOLD));
+        centerPanel.add(new ScoreCircleLabel(new Color(100, 110, 130)));
         gbc.gridx = 1;
         gbc.weightx = 0;
         gbc.fill = GridBagConstraints.NONE;
@@ -95,7 +146,7 @@ public class TimerUI extends JPanel {
         lblName.setFont(new Font("Segoe UI", Font.BOLD, 17));
         lblName.setForeground(COLOR_TEXT_WHITE);
 
-        JPanel avatar = createAvatarPanel(isPlayer1 ? COLOR_GOLD : COLOR_CYAN, isPlayer1 ? "X" : "O");
+        JPanel avatar = new AvatarPanel(isPlayer1 ? COLOR_GOLD : COLOR_CYAN, isPlayer1 ? "X" : "O");
 
         if (isPlayer1) {
             nameRow.add(lblName);
@@ -130,47 +181,6 @@ public class TimerUI extends JPanel {
         timerRow.add(lblTimer);
         panel.add(timerRow);
         return panel;
-    }
-
-    private JPanel createAvatarPanel(Color borderColor, String symbol) {
-        JPanel avatar = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int size = Math.min(getWidth(), getHeight());
-                int x = (getWidth() - size) / 2, y = (getHeight() - size) / 2;
-                g2.setColor(new Color(45, 50, 70));
-                g2.fillOval(x + 3, y + 3, size - 6, size - 6);
-                g2.setStroke(new BasicStroke(3f));
-                g2.setColor(borderColor);
-                g2.drawOval(x + 2, y + 2, size - 4, size - 4);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, size / 2));
-                FontMetrics fm = g2.getFontMetrics();
-                g2.drawString(symbol, x + (size - fm.stringWidth(symbol)) / 2,
-                        y + (size - fm.getHeight()) / 2 + fm.getAscent());
-                g2.dispose();
-            }
-        };
-        avatar.setOpaque(false);
-        avatar.setPreferredSize(new Dimension(50, 50));
-        return avatar;
-    }
-
-    private JLabel createScoreCircle(Color color) {
-        JLabel c = new JLabel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(color);
-                g2.fillOval(2, 2, getWidth() - 4, getHeight() - 4);
-                g2.dispose();
-            }
-        };
-        c.setPreferredSize(new Dimension(18, 18));
-        return c;
     }
 
     private void setupTimer() {

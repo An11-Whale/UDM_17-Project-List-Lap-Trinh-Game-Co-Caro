@@ -19,6 +19,8 @@ public class LobbyUI extends javax.swing.JFrame {
         setupClientListener();
     }
 
+    private javax.swing.JDialog incomingChallengeDialog;
+
     private void setupClientListener() {
         if (this.client != null) {
             this.client.setListener(new ClientSocket.ClientListener() {
@@ -26,6 +28,7 @@ public class LobbyUI extends javax.swing.JFrame {
                 @Override public void onLogin(boolean success, String message) {}
                 @Override public void onGameStart(int myId, String opponentName) {
                     javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeIncomingChallengeDialog();
                         dispose();
                         BoardUI board = new BoardUI(username, LobbyUI.this.client, myId, opponentName);
                         board.setLobbyCallback(() -> new LobbyUI(username, LobbyUI.this.client).setVisible(true));
@@ -44,6 +47,7 @@ public class LobbyUI extends javax.swing.JFrame {
                 }
                 @Override public void onDisconnected() {
                      javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeIncomingChallengeDialog();
                         javax.swing.JOptionPane.showMessageDialog(LobbyUI.this,
                                 "Mất kết nối với Server!", "Lỗi", javax.swing.JOptionPane.ERROR_MESSAGE);
                         dispose();
@@ -53,22 +57,60 @@ public class LobbyUI extends javax.swing.JFrame {
                 @Override public void onPlayersList(String[] players) {}
                 @Override public void onChallengeFrom(String fromUser) {
                     javax.swing.SwingUtilities.invokeLater(() -> {
-                        int choice = javax.swing.JOptionPane.showConfirmDialog(LobbyUI.this,
-                            fromUser + " muốn thách đấu với bạn. Chấp nhận?",
-                            "Lời mời thách đấu",
-                            javax.swing.JOptionPane.YES_NO_OPTION);
-                        if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                        closeIncomingChallengeDialog();
+
+                        incomingChallengeDialog = new javax.swing.JDialog(LobbyUI.this, "Lời mời thách đấu", false);
+                        incomingChallengeDialog.setLayout(new java.awt.BorderLayout(10, 10));
+                        incomingChallengeDialog.setSize(350, 150);
+                        incomingChallengeDialog.setLocationRelativeTo(LobbyUI.this);
+
+                        javax.swing.JLabel lblMsg = new javax.swing.JLabel(
+                                fromUser + " muốn thách đấu với bạn. Chấp nhận?",
+                                javax.swing.SwingConstants.CENTER);
+                        lblMsg.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+                        incomingChallengeDialog.add(lblMsg, java.awt.BorderLayout.CENTER);
+
+                        javax.swing.JPanel btnPanel = new javax.swing.JPanel();
+                        javax.swing.JButton btnAccept = new javax.swing.JButton("Chấp nhận");
+                        javax.swing.JButton btnDecline = new javax.swing.JButton("Từ chối");
+
+                        btnAccept.addActionListener(ev -> {
                             client.acceptChallenge(fromUser);
-                        } else {
+                            closeIncomingChallengeDialog();
+                        });
+                        btnDecline.addActionListener(ev -> {
                             client.declineChallenge(fromUser);
-                        }
+                            closeIncomingChallengeDialog();
+                        });
+
+                        btnPanel.add(btnAccept);
+                        btnPanel.add(btnDecline);
+                        incomingChallengeDialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
+
+                        incomingChallengeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
+                        incomingChallengeDialog.setVisible(true);
                     });
                 }
                 @Override public void onChallengeAccepted() {}
                 @Override public void onChallengeDeclined(String byUser) {}
+                @Override public void onChallengeCancelled(String byUser) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeIncomingChallengeDialog();
+                        javax.swing.JOptionPane.showMessageDialog(LobbyUI.this,
+                                byUser + " đã hủy lời mời thách đấu.", "Đã hủy",
+                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    });
+                }
                 @Override public void onHistoryData(String data) {}
                 @Override public void onOpponentSurrendered() {}
             });
+        }
+    }
+
+    private void closeIncomingChallengeDialog() {
+        if (incomingChallengeDialog != null) {
+            incomingChallengeDialog.dispose();
+            incomingChallengeDialog = null;
         }
     }
 
@@ -92,8 +134,7 @@ public class LobbyUI extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         headerPanel = new javax.swing.JPanel();
@@ -109,7 +150,6 @@ public class LobbyUI extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Caro Game - Lobby");
         setMinimumSize(new java.awt.Dimension(520, 500));
-        setPreferredSize(new java.awt.Dimension(520, 500));
         setResizable(false);
 
         headerPanel.setPreferredSize(new java.awt.Dimension(520, 70));

@@ -14,6 +14,8 @@ public class ChallengeUI extends javax.swing.JFrame {
     private List<PlayerInfo> onlinePlayers;
     private ClientSocket client;
     private JDialog waitingDialog;
+    private String challengeTarget;
+    private JDialog incomingChallengeDialog;
 
     public ChallengeUI(String myUsername, ClientSocket client) {
         this.myUsername = myUsername;
@@ -98,18 +100,38 @@ public class ChallengeUI extends javax.swing.JFrame {
 
                 @Override
                 public void onChallengeFrom(String fromUser) {
-                    // Tranh chap popup: Nếu dang đợi ng khac ma bi thach dau thi sao?
-                    // Tam thoi bo qua or hien thi chong len. Tot nhat la handle trong LobbyUI
                     javax.swing.SwingUtilities.invokeLater(() -> {
-                        int choice = JOptionPane.showConfirmDialog(ChallengeUI.this,
-                                fromUser + " muốn thách đấu với bạn. Chấp nhận?",
-                                "Lời mời thách đấu",
-                                JOptionPane.YES_NO_OPTION);
-                        if (choice == JOptionPane.YES_OPTION) {
+                        // Dong dialog cu neu co
+                        closeIncomingChallengeDialog();
+
+                        incomingChallengeDialog = new JDialog(ChallengeUI.this, "Lời mời thách đấu", false);
+                        incomingChallengeDialog.setLayout(new java.awt.BorderLayout(10, 10));
+                        incomingChallengeDialog.setSize(350, 150);
+                        incomingChallengeDialog.setLocationRelativeTo(ChallengeUI.this);
+
+                        JLabel lblMsg = new JLabel(fromUser + " muốn thách đấu với bạn. Chấp nhận?", SwingConstants.CENTER);
+                        lblMsg.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                        incomingChallengeDialog.add(lblMsg, java.awt.BorderLayout.CENTER);
+
+                        JPanel btnPanel = new JPanel();
+                        JButton btnAccept = new JButton("Chấp nhận");
+                        JButton btnDecline = new JButton("Từ chối");
+
+                        btnAccept.addActionListener(ev -> {
                             client.acceptChallenge(fromUser);
-                        } else {
+                            closeIncomingChallengeDialog();
+                        });
+                        btnDecline.addActionListener(ev -> {
                             client.declineChallenge(fromUser);
-                        }
+                            closeIncomingChallengeDialog();
+                        });
+
+                        btnPanel.add(btnAccept);
+                        btnPanel.add(btnDecline);
+                        incomingChallengeDialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
+
+                        incomingChallengeDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                        incomingChallengeDialog.setVisible(true);
                     });
                 }
 
@@ -124,6 +146,15 @@ public class ChallengeUI extends javax.swing.JFrame {
                         closeWaitingDialog();
                         JOptionPane.showMessageDialog(ChallengeUI.this,
                                 byUser + " đã từ chối lời thách đấu.", "Từ chối", JOptionPane.INFORMATION_MESSAGE);
+                    });
+                }
+
+                @Override
+                public void onChallengeCancelled(String byUser) {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        closeIncomingChallengeDialog();
+                        JOptionPane.showMessageDialog(ChallengeUI.this,
+                                byUser + " đã hủy lời mời thách đấu.", "Đã hủy", JOptionPane.INFORMATION_MESSAGE);
                     });
                 }
 
@@ -233,6 +264,7 @@ public class ChallengeUI extends javax.swing.JFrame {
     }
 
     private void showWaitingDialog(String targetUser) {
+        challengeTarget = targetUser;
         waitingDialog = new JDialog(this, "Đang chờ", true);
         waitingDialog.setLayout(new BorderLayout());
         waitingDialog.setSize(300, 150);
@@ -241,10 +273,13 @@ public class ChallengeUI extends javax.swing.JFrame {
         JLabel lblWait = new JLabel("Đang đợi " + targetUser + " chấp nhận...", SwingConstants.CENTER);
         waitingDialog.add(lblWait, BorderLayout.CENTER);
 
-        JButton btnCancel = new JButton("Hủy");
+        JButton btnCancel = new JButton("Hủy lời mời");
         btnCancel.addActionListener(e -> {
+            if (client != null && challengeTarget != null) {
+                client.cancelChallenge(challengeTarget);
+            }
+            challengeTarget = null;
             closeWaitingDialog();
-            // TODO: Optional: Send cancel challenge to server
         });
         JPanel bottom = new JPanel();
         bottom.add(btnCancel);
@@ -260,9 +295,15 @@ public class ChallengeUI extends javax.swing.JFrame {
         }
     }
 
+    private void closeIncomingChallengeDialog() {
+        if (incomingChallengeDialog != null) {
+            incomingChallengeDialog.dispose();
+            incomingChallengeDialog = null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         headerPanel = new javax.swing.JPanel();
