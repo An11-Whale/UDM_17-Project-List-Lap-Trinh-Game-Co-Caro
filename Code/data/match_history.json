@@ -2,25 +2,26 @@
     {
         "winner": "Nguyen",
         "loser": "Ninh",
-        "reason": "surrender",
-        "date": "14/04/2026 17:01"
-    },
-    {
-        "winner": "Ninh",
-        "loser": "Nguyen",
         "reason": "normal",
-        "date": "14/04/2026 17:03"
+        "date": "15/04/2026 23:24"
     },
     {
-        "winner": "Ninh",
-        "loser": "Nguyen",
-        "reason": "normal",
-        "date": "14/04/2026 17:07"
+        "winner": "b",
+        "loser": "a",
+        "reason": "disconnect",
+        "date": "16/04/2026 00:19"
     },
     {
-        "winner": "Ninh",
-        "loser": "Nguyen",
+        "winner": "b",
+        "loser": "a",
+        "reason": "timeout",
+        "date": "16/04/2026 00:21"
+    },
+    {
+        "winner": "b",
+        "loser": "a",
         "reason": "surrender",
+<<<<<<< HEAD
         "date": "14/04/2026 17:10"
     },
     {
@@ -136,5 +137,8 @@
         "loser": "q",
         "reason": "normal",
         "date": "15/04/2026 21:50"
+=======
+        "date": "16/04/2026 00:24"
+>>>>>>> Nguyen
     }
 ]
