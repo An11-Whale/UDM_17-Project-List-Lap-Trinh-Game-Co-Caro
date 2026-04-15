@@ -214,7 +214,11 @@ class GameHandler:
 
             target_user = parts[1]
             from_user = self.conn_to_user.get(conn, "")
-
+            #  CHẶN người gửi nếu đang chơi
+            with self.game_lock:
+                if from_user in self.active_games:
+                    conn.sendall(b'CHALLENGE_ERROR ban dang trong tran dau\n')
+                    return None
             if not from_user:
                 conn.sendall(b'CHALLENGE_ERROR not_logged_in\n')
                 return None
@@ -225,7 +229,11 @@ class GameHandler:
             if not target_conn:
                 conn.sendall(b'CHALLENGE_ERROR user_offline\n')
                 return None
-
+            #  CHẶN nếu đối thủ đang chơi
+            with self.game_lock:
+                if target_user in self.active_games:
+                    conn.sendall(b'CHALLENGE_ERROR doi thu dang trong tran dau\n')
+                    return None
             # Luu pending challenge
             with self.challenge_lock:
                 self.pending_challenges[target_user] = from_user
