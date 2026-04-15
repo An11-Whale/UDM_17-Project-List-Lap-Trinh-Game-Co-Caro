@@ -224,23 +224,21 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         headerPanel = new javax.swing.JPanel();
         btnBack = new javax.swing.JButton();
         lblPlayer1 = new javax.swing.JLabel();
         lblVs = new javax.swing.JLabel();
-        lblPlayer2 = new javax.swing.JLabel();
         btnSurrender = new javax.swing.JButton();
+        lblPlayer2 = new javax.swing.JLabel();
         boardContainer = new javax.swing.JPanel();
         boardPanel = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Caro Game");
         setMinimumSize(new java.awt.Dimension(700, 780));
-        setPreferredSize(new java.awt.Dimension(700, 780));
         setResizable(false);
 
         headerPanel.setPreferredSize(new java.awt.Dimension(700, 50));
@@ -269,11 +267,6 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         headerPanel.add(lblVs);
         lblVs.setBounds(310, 12, 40, 22);
 
-        lblPlayer2.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
-        lblPlayer2.setText("Player 2");
-        headerPanel.add(lblPlayer2);
-        lblPlayer2.setBounds(360, 12, 150, 22);
-
         btnSurrender.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnSurrender.setText("Đầu hàng");
         btnSurrender.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -284,6 +277,11 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         });
         headerPanel.add(btnSurrender);
         btnSurrender.setBounds(570, 10, 100, 30);
+
+        lblPlayer2.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
+        lblPlayer2.setText("Player 2");
+        headerPanel.add(lblPlayer2);
+        lblPlayer2.setBounds(360, 10, 140, 22);
 
         getContentPane().add(headerPanel, java.awt.BorderLayout.NORTH);
 
