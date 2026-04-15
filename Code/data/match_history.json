@@ -1,0 +1,44 @@
+[
+    {
+        "winner": "Nguyen",
+        "loser": "Ninh",
+        "reason": "surrender",
+        "date": "14/04/2026 17:01"
+    },
+    {
+        "winner": "Ninh",
+        "loser": "Nguyen",
+        "reason": "normal",
+        "date": "14/04/2026 17:03"
+    },
+    {
+        "winner": "Ninh",
+        "loser": "Nguyen",
+        "reason": "normal",
+        "date": "14/04/2026 17:07"
+    },
+    {
+        "winner": "Ninh",
+        "loser": "Nguyen",
+        "reason": "surrender",
+        "date": "14/04/2026 17:10"
+    },
+    {
+        "winner": "Ninh",
+        "loser": "Nguyen",
+        "reason": "timeout",
+        "date": "15/04/2026 22:03"
+    },
+    {
+        "winner": "Ninh",
+        "loser": "Nguyen",
+        "reason": "timeout",
+        "date": "15/04/2026 22:04"
+    },
+    {
+        "winner": "Pha",
+        "loser": "Ninh",
+        "reason": "normal",
+        "date": "15/04/2026 22:32"
+    }
+]
