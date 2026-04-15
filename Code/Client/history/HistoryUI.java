@@ -51,6 +51,7 @@ public class HistoryUI extends javax.swing.JFrame {
                 @Override public void onChallengeFrom(String fromUser) {}
                 @Override public void onChallengeAccepted() {}
                 @Override public void onChallengeDeclined(String byUser) {}
+                @Override public void onChallengeCancelled(String byUser) {}
                 @Override public void onOpponentSurrendered() {}
                 
                 @Override public void onHistoryData(String data) {

@@ -38,8 +38,12 @@ class GameHandler:
     def load_users(self):
         if not os.path.exists(self.users_file):
             return {}
-        with open(self.users_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(self.users_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except (json.JSONDecodeError, ValueError):
+            return {}
 
     def save_users(self):
         with open(self.users_file, 'w', encoding='utf-8') as f:
@@ -48,8 +52,12 @@ class GameHandler:
     def load_history(self):
         if not os.path.exists(self.history_file):
             return []
-        with open(self.history_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(self.history_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, ValueError):
+            return []
 
     def save_history(self):
         with open(self.history_file, 'w', encoding='utf-8') as f:
@@ -228,6 +236,32 @@ class GameHandler:
                 print(f"{from_user} challenged {target_user}")
             except:
                 conn.sendall(b'CHALLENGE_ERROR send_failed\n')
+
+        #  CANCEL_CHALLENGE 
+        elif command == "CANCEL_CHALLENGE":
+            if len(parts) != 2:
+                return None
+
+            target_user = parts[1]
+            from_user = self.conn_to_user.get(conn, "")
+
+            if not from_user:
+                return None
+
+            with self.challenge_lock:
+                # Xoa challenge neu ton tai
+                if target_user in self.pending_challenges and self.pending_challenges[target_user] == from_user:
+                    del self.pending_challenges[target_user]
+                    print(f"{from_user} cancelled challenge to {target_user}")
+
+                    # Thong bao cho nguoi bi thach dau
+                    with self.online_lock:
+                        target_conn = self.online_users.get(target_user)
+                    if target_conn:
+                        try:
+                            target_conn.sendall(f"CHALLENGE_CANCELLED {from_user}\n".encode())
+                        except:
+                            pass
 
         #  ACCEPT_CHALLENGE 
         elif command == "ACCEPT_CHALLENGE":

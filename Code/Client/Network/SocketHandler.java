@@ -37,6 +37,8 @@ public class SocketHandler {
 
         void onChallengeDeclined(String byUser);
 
+        void onChallengeCancelled(String byUser);
+
         void onHistoryData(String data);
 
         void onOpponentSurrendered();
@@ -143,6 +145,13 @@ public class SocketHandler {
                 }
                 break;
 
+            case "CHALLENGE_CANCELLED":
+                if (listener != null) {
+                    String cancelledBy = parts.length > 1 ? parts[1].trim() : "";
+                    listener.onChallengeCancelled(cancelledBy);
+                }
+                break;
+
             case "CHALLENGE_ERROR":
                 if (listener != null) {
                     listener.onMessage("CHALLENGE_ERROR " + (parts.length > 1 ? parts[1] : ""));
@@ -244,6 +253,10 @@ public class SocketHandler {
 
     public void declineChallenge(String fromUser) {
         send("DECLINE_CHALLENGE " + fromUser);
+    }
+
+    public void cancelChallenge(String targetUser) {
+        send("CANCEL_CHALLENGE " + targetUser);
     }
 
     public void sendGameResult(String winner, String loser, String reason) {

@@ -25,6 +25,8 @@ public class ClientSocket {
 
         void onChallengeDeclined(String byUser);
 
+        void onChallengeCancelled(String byUser);
+
         void onHistoryData(String data);
 
         void onOpponentSurrendered();
@@ -93,6 +95,12 @@ public class ClientSocket {
             public void onChallengeDeclined(String byUser) {
                 if (listener != null)
                     listener.onChallengeDeclined(byUser);
+            }
+
+            @Override
+            public void onChallengeCancelled(String byUser) {
+                if (listener != null)
+                    listener.onChallengeCancelled(byUser);
             }
 
             @Override
@@ -168,6 +176,12 @@ public class ClientSocket {
             }
 
             @Override
+            public void onChallengeCancelled(String byUser) {
+                if (listener != null)
+                    listener.onChallengeCancelled(byUser);
+            }
+
+            @Override
             public void onHistoryData(String data) {
                 if (listener != null)
                     listener.onHistoryData(data);
@@ -219,6 +233,10 @@ public class ClientSocket {
 
     public void declineChallenge(String fromUser) {
         socket.declineChallenge(fromUser);
+    }
+
+    public void cancelChallenge(String targetUser) {
+        socket.cancelChallenge(targetUser);
     }
 
     public void sendGameResult(String winner, String loser, String reason) {

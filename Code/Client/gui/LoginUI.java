@@ -171,6 +171,7 @@ public class LoginUI extends javax.swing.JFrame {
             @Override public void onChallengeFrom(String fromUser) {}
             @Override public void onChallengeAccepted() {}
             @Override public void onChallengeDeclined(String byUser) {}
+            @Override public void onChallengeCancelled(String byUser) {}
             @Override public void onHistoryData(String data) {}
             @Override public void onOpponentSurrendered() {}
         });
@@ -218,6 +219,7 @@ public class LoginUI extends javax.swing.JFrame {
             @Override public void onChallengeFrom(String fromUser) {}
             @Override public void onChallengeAccepted() {}
             @Override public void onChallengeDeclined(String byUser) {}
+            @Override public void onChallengeCancelled(String byUser) {}
             @Override public void onHistoryData(String data) {}
             @Override public void onOpponentSurrendered() {}
         });

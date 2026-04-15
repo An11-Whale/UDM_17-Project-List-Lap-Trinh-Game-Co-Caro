@@ -88,6 +88,10 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
                 }
 
                 @Override
+                public void onChallengeCancelled(String byUser) {
+                }
+
+                @Override
                 public void onHistoryData(String data) {
                 }
 
