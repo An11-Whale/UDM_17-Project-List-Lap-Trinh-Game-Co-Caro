@@ -70,6 +70,8 @@ class GameHandler:
             return False, 'LOGIN_ERROR user_not_found'
         if self.users[username] != password:
            return False, 'LOGIN_ERROR wrong_password'
+        if username in self.online_users:
+            return False, 'LOGIN_ERROR tai khoan nay da dang nhap o noi khac'
         print(f"Login: {username}")
         return True, 'LOGIN_SUCCESS'
 
@@ -237,7 +239,7 @@ class GameHandler:
 
             with self.challenge_lock:
                 if target_user not in self.pending_challenges:
-                    conn.sendall(b'CHALLENGE_ERROR no_pending\n')
+                    conn.sendall(b'CHALLENGE_ERROR Loi moi da het han\n')
                     return None
                 del self.pending_challenges[target_user]
 
@@ -247,6 +249,33 @@ class GameHandler:
             if not from_conn:
                 conn.sendall(b'CHALLENGE_ERROR user_offline\n')
                 return None
+
+            # CANCEL ALL OTHER PENDING CHALLENGES FOR BOTH PLAYERS
+            print("Cancelling other pending challenges...")
+            with self.challenge_lock:
+                to_remove = []
+                for t in list(self.pending_challenges.keys()):
+                    c = self.pending_challenges.get(t)
+                    if c == from_user or t == target_user:
+                        to_remove.append(t)
+                        # Notify challenger
+                        ch_conn = self.online_users.get(c)
+                        if ch_conn:
+                            try:
+                                ch_conn.sendall(f"CHALLENGE_DECLINED {t}\n".encode())
+                            except:
+                                pass
+                        # Notify target
+                        t_conn = self.online_users.get(t)
+                        if t_conn:
+                            try:
+                                t_conn.sendall(f"CHALLENGE_DECLINED {c}\n".encode())
+                            except:
+                                pass
+                        print(f"Cancelled {c} -> {t}")
+
+                for t in to_remove:
+                    self.pending_challenges.pop(t, None)
 
             # Bat dau game session
             print(f"Challenge accepted: {from_user} vs {target_user}")
@@ -297,6 +326,7 @@ class GameHandler:
                     player_id = game["my_id"]
                     
                     # check hoat dong binh thuong
+                    
                     if 0 <= row < 15 and 0 <= col < 15:
                         msg_to_send = f"MOVE {row} {col} {player_id}\n"
                         # Gui cho ca 2 player de update UI dong bo

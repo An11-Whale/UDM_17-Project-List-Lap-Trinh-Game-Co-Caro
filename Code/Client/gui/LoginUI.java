@@ -155,7 +155,11 @@ public class LoginUI extends javax.swing.JFrame {
                         new LobbyUI(user, client).setVisible(true);
                     } else {
                         lblError.setForeground(new java.awt.Color(255, 90, 90));
-                        lblError.setText("Lỗi: " + message);
+                        if ("already_logged_in".equals(message)) {
+                            lblError.setText("Tài khoản đang online ở nơi khác! Vui lòng đăng xuất trước.");
+                        } else {
+                            lblError.setText("Lỗi: " + message);
+                        }
                     }
                 });
             }
