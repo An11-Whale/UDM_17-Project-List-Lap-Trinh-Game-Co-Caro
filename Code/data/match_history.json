@@ -4,5 +4,23 @@
         "loser": "Ninh",
         "reason": "normal",
         "date": "15/04/2026 23:24"
+    },
+    {
+        "winner": "b",
+        "loser": "a",
+        "reason": "disconnect",
+        "date": "16/04/2026 00:19"
+    },
+    {
+        "winner": "b",
+        "loser": "a",
+        "reason": "timeout",
+        "date": "16/04/2026 00:21"
+    },
+    {
+        "winner": "b",
+        "loser": "a",
+        "reason": "surrender",
+        "date": "16/04/2026 00:24"
     }
 ]

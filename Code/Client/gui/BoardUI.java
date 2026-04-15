@@ -372,6 +372,19 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
         int choice = javax.swing.JOptionPane.showConfirmDialog(this,
                 "Thoát trận đấu?", "Xác nhận", javax.swing.JOptionPane.YES_NO_OPTION);
         if (choice == javax.swing.JOptionPane.YES_OPTION) {
+            if (timerPanel != null)
+                timerPanel.stopTimer();
+            if (gameManager != null)
+                gameManager.forceGameOver();
+
+            // Gui SURRENDER len server
+            if (client != null) {
+                client.getSocketHandler().send("SURRENDER");
+            }
+            String winner = (myPlayerId == PLAYER_X) ? lblPlayer2.getText() : lblPlayer1.getText();
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Bạn đã đầu hàng!\n" + winner + " thắng!",
+                    "Kết thúc", javax.swing.JOptionPane.INFORMATION_MESSAGE);
             returnToLobby();
         }
     }// GEN-LAST:event_btnBackActionPerformed
