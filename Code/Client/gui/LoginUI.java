@@ -4,9 +4,30 @@ import Code.Client.Network.ClientSocket;
 
 public class LoginUI extends javax.swing.JFrame {
 
+    private javax.swing.JButton btnBackToLogin;
+
     public LoginUI() {
         initComponents();
         setupDarkTheme();
+        setupBackButton();
+    }
+
+    private void setupBackButton() {
+        btnBackToLogin = new javax.swing.JButton("← Quay lại đăng nhập");
+        btnBackToLogin.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        btnBackToLogin.setBackground(new java.awt.Color(45, 52, 78));
+        btnBackToLogin.setForeground(java.awt.Color.WHITE);
+        btnBackToLogin.setFocusPainted(false);
+        btnBackToLogin.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnBackToLogin.setBounds(30, 310, 320, 42);
+        btnBackToLogin.setVisible(false);
+        btnBackToLogin.addActionListener(e -> {
+            btnBackToLogin.setVisible(false);
+            btnLogin.setVisible(true);
+            lblSubtitle.setText("Đăng nhập để chơi");
+            lblError.setText(" ");
+        });
+        mainPanel.add(btnBackToLogin);
     }
 
     private void setupDarkTheme() {
@@ -32,7 +53,8 @@ public class LoginUI extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         mainPanel = new javax.swing.JPanel();
@@ -144,28 +166,70 @@ public class LoginUI extends javax.swing.JFrame {
             return;
         }
         client.setListener(new ClientSocket.ClientListener() {
-            @Override public void onConnected() {}
-            @Override public void onLogin(boolean success, String message) {
+            @Override
+            public void onConnected() {
+            }
+
+            @Override
+            public void onLogin(boolean success, String message) {
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     if (success) {
                         dispose();
                         new LobbyUI(user, client).setVisible(true);
                     } else {
                         lblError.setForeground(new java.awt.Color(255, 90, 90));
-                        lblError.setText("Lỗi: " + message);
+                        if (message.contains("user_not_found")) {
+                            lblError.setText("Tài khoản không tồn tại!");
+                        } else if (message.contains("wrong_password")) {
+                            lblError.setText("Sai mật khẩu!");
+                        } else if (message.contains("already_logged_in")) {
+                            lblError.setText("Tài khoản đang được đăng nhập!");
+                        } else {
+                            lblError.setText("Lỗi: " + message);
+                        }
                     }
                 });
             }
-            @Override public void onGameStart(int myId, String opponentName) {}
-            @Override public void onMove(int row, int col, int player) {}
-            @Override public void onMessage(String msg) {}
-            @Override public void onDisconnected() {}
-            @Override public void onPlayersList(String[] players) {}
-            @Override public void onChallengeFrom(String fromUser) {}
-            @Override public void onChallengeAccepted() {}
-            @Override public void onChallengeDeclined(String byUser) {}
-            @Override public void onHistoryData(String data) {}
-            @Override public void onOpponentSurrendered() {}
+
+            @Override
+            public void onGameStart(int myId, String opponentName) {
+            }
+
+            @Override
+            public void onMove(int row, int col, int player) {
+            }
+
+            @Override
+            public void onMessage(String msg) {
+            }
+
+            @Override
+            public void onDisconnected() {
+            }
+
+            @Override
+            public void onPlayersList(String[] players) {
+            }
+
+            @Override
+            public void onChallengeFrom(String fromUser) {
+            }
+
+            @Override
+            public void onChallengeAccepted() {
+            }
+
+            @Override
+            public void onChallengeDeclined(String byUser) {
+            }
+
+            @Override
+            public void onHistoryData(String data) {
+            }
+
+            @Override
+            public void onOpponentSurrendered() {
+            }
         });
         lblError.setForeground(new java.awt.Color(220, 225, 240));
         lblError.setText("Đang đăng nhập...");
@@ -173,6 +237,10 @@ public class LoginUI extends javax.swing.JFrame {
     }// GEN-LAST:event_btnLoginActionPerformed
 
     private void btnRegisterActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnRegisterActionPerformed
+        // ẩn nút đăng nhập, hiện nút quay lại
+        btnLogin.setVisible(false);
+        btnBackToLogin.setVisible(true);
+        lblSubtitle.setText("Bạn hãy đăng ký");
         String user = txtUsername.getText().trim();
         String pass = String.valueOf(txtPassword.getPassword());
         if (user.isEmpty()) {
@@ -189,30 +257,71 @@ public class LoginUI extends javax.swing.JFrame {
             return;
         }
         client.setListener(new ClientSocket.ClientListener() {
-            @Override public void onConnected() {}
-            @Override public void onLogin(boolean success, String message) {}
-            @Override public void onGameStart(int myId, String opponentName) {}
-            @Override public void onMove(int row, int col, int player) {}
-            @Override public void onMessage(String msg) {
+            @Override
+            public void onConnected() {
+            }
+
+            @Override
+            public void onLogin(boolean success, String message) {
+            }
+
+            @Override
+            public void onGameStart(int myId, String opponentName) {
+            }
+
+            @Override
+            public void onMove(int row, int col, int player) {
+            }
+
+            @Override
+            public void onMessage(String msg) {
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     if (msg.startsWith("REGISTER_SUCCESS")) {
                         lblError.setForeground(new java.awt.Color(50, 200, 120));
                         lblError.setText("Đăng ký thành công!");
+                        btnLogin.setVisible(true);
+                        lblSubtitle.setText("Đăng nhập để chơi");
                         client.disconnect();
                     } else if (msg.startsWith("REGISTER_ERROR")) {
                         lblError.setForeground(new java.awt.Color(255, 90, 90));
-                        lblError.setText("Lỗi: " + msg.replace("REGISTER_ERROR", "").trim());
+                        String err = msg.replace("REGISTER_ERROR", "").trim();
+                        if (err.contains("user_exists")) {
+                            lblError.setText("Tên tài khoản đã tồn tại!");
+                        } else {
+                            lblError.setText("Lỗi: " + err);
+                        }
                         client.disconnect();
                     }
                 });
             }
-            @Override public void onDisconnected() {}
-            @Override public void onPlayersList(String[] players) {}
-            @Override public void onChallengeFrom(String fromUser) {}
-            @Override public void onChallengeAccepted() {}
-            @Override public void onChallengeDeclined(String byUser) {}
-            @Override public void onHistoryData(String data) {}
-            @Override public void onOpponentSurrendered() {}
+
+            @Override
+            public void onDisconnected() {
+            }
+
+            @Override
+            public void onPlayersList(String[] players) {
+            }
+
+            @Override
+            public void onChallengeFrom(String fromUser) {
+            }
+
+            @Override
+            public void onChallengeAccepted() {
+            }
+
+            @Override
+            public void onChallengeDeclined(String byUser) {
+            }
+
+            @Override
+            public void onHistoryData(String data) {
+            }
+
+            @Override
+            public void onOpponentSurrendered() {
+            }
         });
         lblError.setForeground(new java.awt.Color(220, 225, 240));
         lblError.setText("Đang xử lý...");
