@@ -134,8 +134,7 @@ public class LobbyUI extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         headerPanel = new javax.swing.JPanel();
@@ -151,7 +150,6 @@ public class LobbyUI extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Caro Game - Lobby");
         setMinimumSize(new java.awt.Dimension(520, 500));
-        setPreferredSize(new java.awt.Dimension(520, 500));
         setResizable(false);
 
         headerPanel.setPreferredSize(new java.awt.Dimension(520, 70));
