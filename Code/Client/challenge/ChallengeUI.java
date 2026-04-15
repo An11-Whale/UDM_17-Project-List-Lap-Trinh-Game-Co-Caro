@@ -222,7 +222,7 @@ public class ChallengeUI extends javax.swing.JFrame {
         name.setForeground(new Color(220, 225, 240));
         info.add(name);
         JLabel stats = new JLabel(
-                player.status + " | ELO: " + player.elo + " | W:" + player.wins + " L:" + player.losses);
+                player.status);
         stats.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         stats.setForeground(busy ? new Color(255, 160, 50) : new Color(50, 200, 120));
         info.add(stats);
