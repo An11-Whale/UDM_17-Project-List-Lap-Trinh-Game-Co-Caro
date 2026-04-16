@@ -105,6 +105,7 @@ public class ChallengeUI extends javax.swing.JFrame {
                         closeIncomingChallengeDialog();
 
                         incomingChallengeDialog = new JDialog(ChallengeUI.this, "Lời mời thách đấu", false);
+                        incomingChallengeDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                         incomingChallengeDialog.setLayout(new java.awt.BorderLayout(10, 10));
                         incomingChallengeDialog.setSize(350, 150);
                         incomingChallengeDialog.setLocationRelativeTo(ChallengeUI.this);
@@ -130,7 +131,6 @@ public class ChallengeUI extends javax.swing.JFrame {
                         btnPanel.add(btnDecline);
                         incomingChallengeDialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
 
-                        incomingChallengeDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                         incomingChallengeDialog.setVisible(true);
                     });
                 }
@@ -266,6 +266,7 @@ public class ChallengeUI extends javax.swing.JFrame {
     private void showWaitingDialog(String targetUser) {
         challengeTarget = targetUser;
         waitingDialog = new JDialog(this, "Đang chờ", true);
+        waitingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         waitingDialog.setLayout(new BorderLayout());
         waitingDialog.setSize(300, 150);
         waitingDialog.setLocationRelativeTo(this);

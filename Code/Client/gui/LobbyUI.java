@@ -60,6 +60,7 @@ public class LobbyUI extends javax.swing.JFrame {
                         closeIncomingChallengeDialog();
 
                         incomingChallengeDialog = new javax.swing.JDialog(LobbyUI.this, "Lời mời thách đấu", false);
+                        incomingChallengeDialog.setDefaultCloseOperation(javax.swing.JDialog.DO_NOTHING_ON_CLOSE);
                         incomingChallengeDialog.setLayout(new java.awt.BorderLayout(10, 10));
                         incomingChallengeDialog.setSize(350, 150);
                         incomingChallengeDialog.setLocationRelativeTo(LobbyUI.this);
@@ -87,7 +88,6 @@ public class LobbyUI extends javax.swing.JFrame {
                         btnPanel.add(btnDecline);
                         incomingChallengeDialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
 
-                        incomingChallengeDialog.setDefaultCloseOperation(javax.swing.JDialog.DISPOSE_ON_CLOSE);
                         incomingChallengeDialog.setVisible(true);
                     });
                 }
