@@ -79,7 +79,7 @@ class GameHandler:
         if self.users[username] != password:
            return False, 'LOGIN_ERROR wrong_password'
         if username in self.online_users:
-            return False, 'LOGIN_ERROR tai khoan nay da dang nhap o noi khac'
+            return False, 'LOGIN_ERROR Tài khoản này đã đăng nhập ở nơi khác'
         print(f"Login: {username}")
         return True, 'LOGIN_SUCCESS'
 
@@ -217,7 +217,7 @@ class GameHandler:
             #  CHẶN người gửi nếu đang chơi
             with self.game_lock:
                 if from_user in self.active_games:
-                    conn.sendall(b'CHALLENGE_ERROR ban dang trong tran dau\n')
+                    conn.sendall('CHALLENGE_ERROR Bạn đang trong trận đấu\n'.encode())
                     return None
             if not from_user:
                 conn.sendall(b'CHALLENGE_ERROR not_logged_in\n')
@@ -227,12 +227,12 @@ class GameHandler:
                 target_conn = self.online_users.get(target_user)
 
             if not target_conn:
-                conn.sendall(b'CHALLENGE_ERROR user_offline\n')
+                conn.sendall('CHALLENGE_ERROR Người chơi ngoại tuyến\n'.encode())
                 return None
             #  CHẶN nếu đối thủ đang chơi
             with self.game_lock:
                 if target_user in self.active_games:
-                    conn.sendall(b'CHALLENGE_ERROR doi thu dang trong tran dau\n')
+                    conn.sendall('CHALLENGE_ERROR Người chơi đang trong trận đấu\n'.encode())
                     return None
             # Luu pending challenge
             with self.challenge_lock:
@@ -281,7 +281,7 @@ class GameHandler:
 
             with self.challenge_lock:
                 if target_user not in self.pending_challenges:
-                    conn.sendall(b'CHALLENGE_ERROR Loi moi da het han\n')
+                    conn.sendall('CHALLENGE_ERROR Lời mời đã hết hạn\n'.encode())
                     return None
                 del self.pending_challenges[target_user]
 
@@ -289,7 +289,7 @@ class GameHandler:
                 from_conn = self.online_users.get(from_user)
 
             if not from_conn:
-                conn.sendall(b'CHALLENGE_ERROR user_offline\n')
+                conn.sendall('CHALLENGE_ERROR Người chơi ngoại tuyến\n'.encode())
                 return None
 
             # CANCEL ALL OTHER PENDING CHALLENGES FOR BOTH PLAYERS
