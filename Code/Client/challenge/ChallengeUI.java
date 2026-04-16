@@ -105,7 +105,6 @@ public class ChallengeUI extends javax.swing.JFrame {
                         closeIncomingChallengeDialog();
 
                         incomingChallengeDialog = new JDialog(ChallengeUI.this, "Lời mời thách đấu", false);
-                        incomingChallengeDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                         incomingChallengeDialog.setLayout(new java.awt.BorderLayout(10, 10));
                         incomingChallengeDialog.setSize(350, 150);
                         incomingChallengeDialog.setLocationRelativeTo(ChallengeUI.this);
@@ -131,6 +130,7 @@ public class ChallengeUI extends javax.swing.JFrame {
                         btnPanel.add(btnDecline);
                         incomingChallengeDialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
 
+                        incomingChallengeDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                         incomingChallengeDialog.setVisible(true);
                     });
                 }
@@ -227,6 +227,7 @@ public class ChallengeUI extends javax.swing.JFrame {
         stats.setForeground(busy ? new Color(255, 160, 50) : new Color(50, 200, 120));
         info.add(stats);
         card.add(info, BorderLayout.CENTER);
+        
 
         // Button
         if (!busy) {
@@ -238,9 +239,10 @@ public class ChallengeUI extends javax.swing.JFrame {
             btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
             btn.setPreferredSize(new Dimension(90, 32));
             btn.addActionListener(e -> {
-                if (client != null) {
+                if (client != null ) {
                     client.challenge(player.name);
                     showWaitingDialog(player.name);
+
                 } else {
                     int r = JOptionPane.showConfirmDialog(this, "Thách đấu " + player.name + "?",
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
@@ -266,7 +268,6 @@ public class ChallengeUI extends javax.swing.JFrame {
     private void showWaitingDialog(String targetUser) {
         challengeTarget = targetUser;
         waitingDialog = new JDialog(this, "Đang chờ", true);
-        waitingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         waitingDialog.setLayout(new BorderLayout());
         waitingDialog.setSize(300, 150);
         waitingDialog.setLocationRelativeTo(this);

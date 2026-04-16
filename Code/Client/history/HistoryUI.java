@@ -66,7 +66,7 @@ public class HistoryUI extends javax.swing.JFrame {
                                     String opp = parts[0];
                                     boolean iWon = "win".equals(parts[1]);
                                     String date = parts[2];
-                                    String reason = parts.length > 3 ? parts[3] : "normal";
+                                    String reason = (parts.length >= 4) ? parts[3] : "normal";
                                     matchHistory.add(new MatchRecord(opp, iWon, date, reason));
                                 }
                             }
@@ -81,6 +81,7 @@ public class HistoryUI extends javax.swing.JFrame {
     private void loadFakeHistory() {
         matchHistory.add(new MatchRecord("Paper Man", true, "13/04/2026 11:30", "normal"));
         matchHistory.add(new MatchRecord("Dark Knight", false, "13/04/2026 10:15", "timeout"));
+        matchHistory.add(new MatchRecord("Shadow", true, "12/04/2026 20:45", "draw"));
     }
 
     private void setupDarkTheme() {
@@ -98,21 +99,25 @@ public class HistoryUI extends javax.swing.JFrame {
         lblTotal.setForeground(new Color(80, 160, 255));
         lblWins.setForeground(new Color(50, 200, 120));
         lblLosses.setForeground(new Color(255, 90, 90));
+        lblDraw.setForeground(new Color(255, 200, 50));
         lblRate.setForeground(new Color(255, 200, 50));
         lblTotalLabel.setForeground(new Color(120, 130, 160));
         lblWinsLabel.setForeground(new Color(120, 130, 160));
         lblLossesLabel.setForeground(new Color(120, 130, 160));
+        lblDrawLabel.setForeground(new Color(120, 130, 160));
         lblRateLabel.setForeground(new Color(120, 130, 160));
     }
 
     private void refreshHistory() {
         historyListPanel.removeAll();
-        int wins = 0, losses = 0;
+        int wins = 0, losses = 0, draws = 0;
         
         // dao nguoc array de tran dung gan nhat hien thi len dau
         for (int i = matchHistory.size() - 1; i >= 0; i--) {
             MatchRecord m = matchHistory.get(i);
-            if (m.isWin)
+            if ("draw".equals(m.reason))
+                draws++;
+            else if (m.isWin)
                 wins++;
             else
                 losses++;
@@ -125,14 +130,23 @@ public class HistoryUI extends javax.swing.JFrame {
         lblTotal.setText(String.valueOf(total));
         lblWins.setText(String.valueOf(wins));
         lblLosses.setText(String.valueOf(losses));
+        lblDraw.setText(String.valueOf(draws));
         lblRate.setText(String.format("%.0f%%", rate));
         historyListPanel.revalidate();
         historyListPanel.repaint();
     }
 
     private JPanel createMatchCard(MatchRecord match) {
-        Color rc = match.isWin ? new Color(50, 200, 120) : new Color(255, 90, 90);
-        String rt = match.isWin ? "THẮNG" : "THUA";
+        Color rc;
+        String rt;
+
+        if ("draw".equals(match.reason)) {
+            rc = new Color(255, 200, 50);
+            rt = "HÒA";
+        } else {
+            rc = match.isWin ? new Color(50, 200, 120) : new Color(255, 90, 90);
+            rt = match.isWin ? "THẮNG" : "THUA";
+        }
 
         JPanel card = new JPanel(new BorderLayout(10, 0));
         card.setBackground(new Color(32, 38, 58));
@@ -181,6 +195,8 @@ public class HistoryUI extends javax.swing.JFrame {
         lblWinsLabel = new javax.swing.JLabel();
         lblLossesLabel = new javax.swing.JLabel();
         lblRateLabel = new javax.swing.JLabel();
+        lblDraw = new javax.swing.JLabel();
+        lblDrawLabel = new javax.swing.JLabel();
         scrollPane = new javax.swing.JScrollPane();
         historyListPanel = new javax.swing.JPanel();
 
@@ -251,6 +267,16 @@ public class HistoryUI extends javax.swing.JFrame {
         lblLossesLabel.setText("Thua");
         statsPanel.add(lblLossesLabel);
 
+        lblDraw.setFont(new java.awt.Font("Segoe UI", 1, 20)); // NOI18N
+        lblDraw.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDraw.setText("0");
+        statsPanel.add(lblDraw);
+
+        lblDrawLabel.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        lblDrawLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDrawLabel.setText("Hòa");
+        statsPanel.add(lblDrawLabel);
+
         lblRateLabel.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         lblRateLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblRateLabel.setText("Tỉ lệ");
@@ -311,7 +337,10 @@ public class HistoryUI extends javax.swing.JFrame {
     private javax.swing.JLabel lblTotalLabel;
     private javax.swing.JLabel lblWins;
     private javax.swing.JLabel lblWinsLabel;
+    private javax.swing.JLabel lblDraw;
+    private javax.swing.JLabel lblDrawLabel;
     private javax.swing.JScrollPane scrollPane;
     private javax.swing.JPanel statsPanel;
+
     // End of variables declaration//GEN-END:variables
 }
