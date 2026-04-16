@@ -17,7 +17,7 @@ public class GameManager {
         void onWin(int player);
         void onLose();
         void onMove(int row, int col, int player);
-        void onDraw();
+        void onDraw(int player);
         void onReset();
         void onTurnChanged(int playerId);
     }
@@ -85,7 +85,7 @@ public class GameManager {
             isGameOver = true;
 
             if (listener != null) {
-                listener.onDraw();
+                listener.onDraw(player);
             }
         }
 

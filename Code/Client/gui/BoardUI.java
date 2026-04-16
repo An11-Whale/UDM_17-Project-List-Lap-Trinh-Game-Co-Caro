@@ -452,12 +452,17 @@ public class BoardUI extends javax.swing.JFrame implements GameManager.GameListe
     }
 
     @Override
-    public void onDraw() {
+    public void onDraw(int playerId) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             if (timerPanel != null)
                 timerPanel.stopTimer();
             javax.swing.JOptionPane.showMessageDialog(this, "Hòa!", "Kết thúc",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                if (client != null) {
+                String winnerName = (playerId == myPlayerId) ? myUsername : opponentName;
+                String loserName = (playerId == myPlayerId) ? opponentName : myUsername;
+                client.sendGameResult(winnerName, loserName, "draw");
+            }
             returnToLobby();
         });
     }

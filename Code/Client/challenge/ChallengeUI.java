@@ -90,8 +90,10 @@ public class ChallengeUI extends javax.swing.JFrame {
                         onlinePlayers.clear();
                         for (String p : players) {
                             if (!p.isEmpty()) {
-                                // Default fake stats for now, server only sends usernames
-                                onlinePlayers.add(new PlayerInfo(p, "Online", 0, 0, 1000));
+                                String[] parts = p.split(":");
+                                String name = parts[0];
+                                String status = parts.length > 1 ? parts[1] : "Online";
+                                onlinePlayers.add(new PlayerInfo(name, status));
                             }
                         }
                         refreshList();
@@ -103,7 +105,6 @@ public class ChallengeUI extends javax.swing.JFrame {
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         // Dong dialog cu neu co
                         closeIncomingChallengeDialog();
-
                         incomingChallengeDialog = new JDialog(ChallengeUI.this, "Lời mời thách đấu", false);
                         incomingChallengeDialog.setLayout(new java.awt.BorderLayout(10, 10));
                         incomingChallengeDialog.setSize(350, 150);
@@ -170,9 +171,9 @@ public class ChallengeUI extends javax.swing.JFrame {
     }
 
     private void loadFakePlayers() {
-        onlinePlayers.add(new PlayerInfo("Paper Man", "Online", 15, 8, 1850));
-        onlinePlayers.add(new PlayerInfo("Dark Knight", "Online", 22, 12, 2100));
-        onlinePlayers.add(new PlayerInfo("StarGamer", "Online", 10, 5, 1600));
+        onlinePlayers.add(new PlayerInfo("Paper Man", "Online"));
+        onlinePlayers.add(new PlayerInfo("Dark Knight", "Online"));
+        onlinePlayers.add(new PlayerInfo("StarGamer", "Online"));
     }
 
     private void setupDarkTheme() {
@@ -207,7 +208,7 @@ public class ChallengeUI extends javax.swing.JFrame {
     }
 
     private JPanel createPlayerCard(PlayerInfo player) {
-        boolean busy = "Đang chơi".equals(player.status);
+        boolean busy = "Đang chơi".equals(player.status) || "Pending".equals(player.status);
         JPanel card = new JPanel(new BorderLayout(10, 0));
         card.setBackground(new Color(32, 38, 58));
         card.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
@@ -242,7 +243,7 @@ public class ChallengeUI extends javax.swing.JFrame {
                 if (client != null ) {
                     client.challenge(player.name);
                     showWaitingDialog(player.name);
-
+                        
                 } else {
                     int r = JOptionPane.showConfirmDialog(this, "Thách đấu " + player.name + "?",
                             "Xác nhận", JOptionPane.YES_NO_OPTION);
@@ -257,7 +258,8 @@ public class ChallengeUI extends javax.swing.JFrame {
             });
             card.add(btn, BorderLayout.EAST);
         } else {
-            JLabel lblBusy = new JLabel("Đang bận");
+            String label = "Đang chơi".equals(player.status) ? "Đang bận" : "Đang được mời";
+            JLabel lblBusy = new JLabel(label);
             lblBusy.setFont(new Font("Segoe UI", Font.ITALIC, 12));
             lblBusy.setForeground(new Color(120, 130, 160));
             card.add(lblBusy, BorderLayout.EAST);
@@ -406,12 +408,9 @@ public class ChallengeUI extends javax.swing.JFrame {
         public String name, status;
         public int wins, losses, elo;
 
-        public PlayerInfo(String n, String s, int w, int l, int e) {
+        public PlayerInfo(String n, String s) {
             name = n;
             status = s;
-            wins = w;
-            losses = l;
-            elo = e;
         }
     }
 

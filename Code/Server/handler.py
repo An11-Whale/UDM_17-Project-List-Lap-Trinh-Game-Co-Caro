@@ -198,7 +198,18 @@ class GameHandler:
         elif command == "GET_PLAYERS":
             requesting_user = self.conn_to_user.get(conn, "")
             with self.online_lock:
-                player_list = [u for u in self.online_users.keys() if u != requesting_user]
+                player_list = []
+                for u in self.online_users.keys():
+                    if u == requesting_user:
+                        continue
+                    status = "Online"
+                    with self.game_lock:
+                        if u in self.active_games:
+                            status = "Playing"
+                    with self.challenge_lock:
+                        if u in self.pending_challenges:
+                            status = "Pending"
+                    player_list.append(f"{u}:{status}")
 
             if player_list:
                 msg = "PLAYERS_LIST " + ",".join(player_list) + "\n"
@@ -234,14 +245,20 @@ class GameHandler:
                 if target_user in self.active_games:
                     conn.sendall('CHALLENGE_ERROR Người chơi đang trong trận đấu\n'.encode())
                     return None
+            # CHẶN nếu người chơi đã được mời
+            with self.challenge_lock:
+                if target_user in self.pending_challenges:
+                    conn.sendall('CHALLENGE_ERROR Người chơi đang được mời\n'.encode())
+                    return None
             # Luu pending challenge
             with self.challenge_lock:
                 self.pending_challenges[target_user] = from_user
 
             # Gui thong bao den target
             try:
-                target_conn.sendall(f"CHALLENGE_FROM {from_user}\n".encode())
-                print(f"{from_user} challenged {target_user}")
+                if target_user in self.pending_challenges and self.pending_challenges[target_user] == from_user:
+                    target_conn.sendall(f"CHALLENGE_FROM {from_user}\n".encode())
+                    print(f"{from_user} challenged {target_user}")
             except:
                 conn.sendall(b'CHALLENGE_ERROR send_failed\n')
 
