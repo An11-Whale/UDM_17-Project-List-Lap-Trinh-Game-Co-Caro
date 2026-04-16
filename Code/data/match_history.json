@@ -21,7 +21,6 @@
         "winner": "b",
         "loser": "a",
         "reason": "surrender",
-<<<<<<< HEAD
         "date": "14/04/2026 17:10"
     },
     {
@@ -137,8 +136,5 @@
         "loser": "q",
         "reason": "normal",
         "date": "15/04/2026 21:50"
-=======
-        "date": "16/04/2026 00:24"
->>>>>>> Nguyen
     }
 ]
